@@ -86,6 +86,9 @@ namespace Hikaria.ResourceMarker.Handlers
 
         private void Update()
         {
+            if (m_marker == null || m_item == null)
+                return;
+
             if (!IsPlacedInLevel)
                 return;
 
@@ -134,6 +137,9 @@ namespace Hikaria.ResourceMarker.Handlers
 
         private void FixedUpdate()
         {
+            if (m_marker == null || m_item == null)
+                return;
+
             if (!IsPlacedInLevel)
                 return;
 
@@ -166,7 +172,11 @@ namespace Hikaria.ResourceMarker.Handlers
         public void ManualUpdate()
         {
             if (!IsPlacedInLevel)
+            {
+                if (m_marker.IsVisible)
+                    AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             if (m_markerForceVisibleTimer >= Clock.Time)
             {
@@ -219,6 +229,9 @@ namespace Hikaria.ResourceMarker.Handlers
             if (!IsDiscovered)
                 IsDiscovered = true;
 
+            if (!IsPlacedInLevel)
+                return;
+
             AttemptInteract(eNavMarkerInteractionType.Show);
             m_marker.Ping(m_markerPingFadeOutTime);
             m_markerForceVisibleTimer = Clock.Time + m_markerPingFadeOutTime;
@@ -229,6 +242,9 @@ namespace Hikaria.ResourceMarker.Handlers
 
         public void OnTerminalPing()
         {
+            if (!IsPlacedInLevel)
+                return;
+
             AttemptInteract(eNavMarkerInteractionType.Show);
             m_marker.Ping(m_markerPingFadeOutTime);
             m_markerForceVisibleTimer = Clock.Time + m_markerPingFadeOutTime;
@@ -311,7 +327,10 @@ namespace Hikaria.ResourceMarker.Handlers
                     CoroutineManager.StopCoroutine(m_marker.m_pingRoutine);
                     m_marker.Scale(m_marker.m_pingObj, m_marker.m_pinStartScale, m_marker.m_pinStartScale, Color.white, Color.white, 0f);
                 }
-                ManualUpdate();
+                if (!value)
+                    AttemptInteract(eNavMarkerInteractionType.Hide);
+                if (m_markerVisibleCheckMode != VisibleCheckModeType.World)
+                    ManualUpdate();
             }
         }
 
