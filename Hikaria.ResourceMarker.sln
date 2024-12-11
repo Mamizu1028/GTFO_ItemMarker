@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35431.28
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hikaria.ResourceMarker", "Hikaria.ResourceMarker\Hikaria.ResourceMarker.csproj", "{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}.Debug|x64.ActiveCfg = Debug|x64
+		{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}.Debug|x64.Build.0 = Debug|x64
+		{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}.Release|x64.ActiveCfg = Release|x64
+		{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {829F9E43-B494-4ABE-87C5-BECAA4F9066D}
+	EndGlobalSection
+EndGlobal
