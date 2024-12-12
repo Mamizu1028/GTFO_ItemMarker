@@ -1,45 +1,57 @@
 ﻿using AIGraph;
 using GameData;
-using Hikaria.ResourceMarker.Handlers;
-using Hikaria.ResourceMarker.Managers;
+using Hikaria.ItemMarker.Handlers;
+using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using TheArchive.Core.Attributes;
 using TheArchive.Core.FeaturesAPI;
 using TheArchive.Loader;
 using UnityEngine;
-using static Hikaria.ResourceMarker.Managers.ResourceMarkerManager;
+using static Hikaria.ItemMarker.Managers.ItemMarkerManager;
 
-namespace Hikaria.ResourceMarker.Features
+namespace Hikaria.ItemMarker.Features
 {
     [EnableFeatureByDefault]
     [DisallowInGameToggle]
-    public class ResourceMarker : Feature
+    [HideInModSettings]
+    [DoNotSaveToConfig]
+    public class ItemMarker : Feature
     {
-        public override string Name => "资源标记";
+        public override string Name => "物品标记";
 
         public override void Init()
         {
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ResourceNavMarkerWrapper>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ResourceScanner>();
-            ResourceMarkerManager.Init();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemNavMarkerWrapper>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemScanner>();
+            ItemMarkerManager.Init();
         }
 
         public override void OnGameDataInitialized()
         {
             foreach (var block in ItemDataBlock.GetAllBlocks())
             {
-                if (!ResourceNavMarkerWrapper.ValidSlots.Contains(block.inventorySlot))
+                if (!ItemNavMarkerWrapper.ValidSlots.Contains(block.inventorySlot))
                     continue;
 
-                if (!ResourceMarkerDescriptions.Value.ContainsKey(block.persistentID))
+                if (!ItemMarkerDescriptions.Value.TryGetValue(block.persistentID, out var desc))
                 {
-                    ResourceMarkerDescriptions.Value[block.persistentID] = new()
+                    desc = new()
                     {
                         ItemID = block.persistentID,
-                        ItemName = block.publicName.Replace('_', ' '),
-                        Title = block.publicName
+                        DataBlockName = block.name,
+                        PublicName = block.publicName,
+                        Title = block.publicName.Replace('_', ' '),
+                        VisibleUpdateMode = ItemNavMarkerWrapper.GetDefaultUpdateModeForSlot(block.inventorySlot),
+                        AlwaysVisible = block.inventorySlot == InventorySlot.InLevelCarry
                     };
+                    ItemMarkerDescriptions.Value[block.persistentID] = desc;
+                }
+                else
+                {
+                    desc.DataBlockName = block.name;
+                    desc.ItemID = block.persistentID;
+                    desc.PublicName = block.publicName;
                 }
             }
         }
@@ -48,7 +60,7 @@ namespace Hikaria.ResourceMarker.Features
         {
             if (state != (int)eGameStateName.InLevel)
                 return;
-            foreach (var pair in ResourceNavMarkerWrapper.ResourceMarkerLookup)
+            foreach (var pair in ItemNavMarkerWrapper.ItemMarkerLookup)
             {
                 pair.Value.UpdateItemUsesLeft();
             }
@@ -73,7 +85,7 @@ namespace Hikaria.ResourceMarker.Features
                 if (nodeChanged)
                 {
                     nodeChanged = false;
-                    foreach (var marker in ResourceNavMarkerWrapper.ResourceMarkerModeLookup[VisibleCheckModeType.CourseNode])
+                    foreach (var marker in ItemNavMarkerWrapper.ItemMarkerModeLookup[VisibleUpdateModeType.CourseNode])
                     {
                         marker.ManualUpdate();
                     }
@@ -82,7 +94,7 @@ namespace Hikaria.ResourceMarker.Features
                 if (zoneChanged)
                 {
                     zoneChanged = false;
-                    foreach (var marker in ResourceNavMarkerWrapper.ResourceMarkerModeLookup[VisibleCheckModeType.Zone])
+                    foreach (var marker in ItemNavMarkerWrapper.ItemMarkerModeLookup[VisibleUpdateModeType.Zone])
                     {
                         marker.ManualUpdate();
                     }
@@ -95,8 +107,8 @@ namespace Hikaria.ResourceMarker.Features
         {
             private static void Postfix(PlayerAgent __instance)
             {
-                if (__instance.GetComponent<ResourceScanner>() == null)
-                    __instance.gameObject.AddComponent<ResourceScanner>();
+                if (__instance.GetComponent<ItemScanner>() == null)
+                    __instance.gameObject.AddComponent<ItemScanner>();
             }
         }
 
@@ -107,7 +119,7 @@ namespace Hikaria.ResourceMarker.Features
             {
                 if (newState.status == eResourceContainerStatus.Open)
                 {
-                    foreach (var marker in __instance.GetComponentsInChildren<ResourceNavMarkerWrapper>(true))
+                    foreach (var marker in __instance.GetComponentsInChildren<ItemNavMarkerWrapper>(true))
                     {
                         marker.IsDiscovered = true;
                         marker.ManualUpdate();
@@ -121,8 +133,8 @@ namespace Hikaria.ResourceMarker.Features
         {
             private static void Postfix(ItemInLevel __instance)
             {
-                if (__instance.GetComponent<ResourceNavMarkerWrapper>() == null)
-                    __instance.gameObject.AddComponent<ResourceNavMarkerWrapper>();
+                if (__instance.GetComponent<ItemNavMarkerWrapper>() == null)
+                    __instance.gameObject.AddComponent<ItemNavMarkerWrapper>();
             }
         }
 
@@ -161,7 +173,7 @@ namespace Hikaria.ResourceMarker.Features
                     var colliders = Physics.OverlapSphere(newState.worldPos, 0.01f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
                     foreach (var collider in colliders)
                     {
-                        var marker = collider.GetComponentInParent<ResourceNavMarkerWrapper>();
+                        var marker = collider.GetComponentInParent<ItemNavMarkerWrapper>();
                         if (marker == null)
                             continue;
                         marker.OnPlayerPing();
@@ -178,10 +190,59 @@ namespace Hikaria.ResourceMarker.Features
         {
             private static void Postfix(LG_GenericTerminalItem __instance)
             {
-                var marker = __instance.GetComponentInParent<ResourceNavMarkerWrapper>();
+                var marker = __instance.GetComponentInParent<ItemNavMarkerWrapper>();
                 if (marker == null)
                     return;
                 marker.OnTerminalPing();
+            }
+        }
+
+        [ArchivePatch(typeof(ItemSpawnManager), nameof(ItemSpawnManager.SpawnItem))]
+        private class ItemSpawnManager__SpawnItem__Patch
+        {
+            private static void Postfix(global::Item __result)
+            {
+                var itemInLevel = __result.TryCast<ItemInLevel>();
+                if (itemInLevel == null)
+                    return;
+                if (itemInLevel.CourseNode != null)
+                    return;
+
+                if (itemInLevel.internalSync.GetCurrentState().status != ePickupItemStatus.PlacedInLevel)
+                    return;
+
+                if (itemInLevel.Get_pItemData().originCourseNode.TryGet(out var node))
+                {
+                    itemInLevel.CourseNode = node;
+                    return;
+                }
+                var terminalItem = itemInLevel.GetComponent<iTerminalItem>();
+                if (terminalItem != null)
+                {
+                    itemInLevel.CourseNode = terminalItem.SpawnNode;
+                    return;
+                }
+                var pickupItem = itemInLevel.transform.parent?.parent?.GetComponentInChildren<LG_PickupItem>();
+                if (pickupItem != null)
+                {
+                    itemInLevel.CourseNode = pickupItem.SpawnNode;
+                    return;
+                }
+            }
+        }
+
+        [ArchivePatch(typeof(LG_ResourceContainer_Storage), nameof(LG_ResourceContainer_Storage.SetSpawnNode))]
+        private class LG_ResourceContainer_Storage__SetSpawnNode__Patch
+        {
+            private static void Postfix(LG_ResourceContainer_Storage __instance, GameObject obj, AIG_CourseNode spawnNode)
+            {
+                foreach (var item in obj.GetComponentsInChildren<ItemInLevel>())
+                {
+                    if (item.CourseNode == null && item.internalSync.GetCurrentState().status == ePickupItemStatus.PlacedInLevel)
+                    {
+                        item.CourseNode = spawnNode;
+                    }
+                }
             }
         }
 
@@ -193,7 +254,7 @@ namespace Hikaria.ResourceMarker.Features
                 var item = __instance.item.TryCast<ItemInLevel>();
                 if (item == null)
                     return;
-                if (!ResourceNavMarkerWrapper.ResourceMarkerLookup.TryGetValue(item.GetInstanceID(), out var marker))
+                if (!ItemNavMarkerWrapper.ItemMarkerLookup.TryGetValue(item.GetInstanceID(), out var marker))
                     return;
 
                 marker.UpdateItemUsesLeft();
@@ -206,6 +267,17 @@ namespace Hikaria.ResourceMarker.Features
                 {
                     marker.IsPlacedInLevel = false;
                 }
+            }
+        }
+
+        [ArchivePatch(typeof(CarryItemPickup_Core), nameof(CarryItemPickup_Core.PlacedInLevelCustomDataUpdate))]
+        private class CarryItemPickup_Core__PlacedInLevelCustomDataUpdate__Patch
+        {
+            private static void Postfix(CarryItemPickup_Core __instance)
+            {
+                if (!ItemNavMarkerWrapper.ItemMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
+                    return;
+                marker.ManualUpdate();
             }
         }
     }

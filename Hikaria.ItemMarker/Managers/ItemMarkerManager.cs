@@ -3,19 +3,20 @@ using TheArchive.Core.Models;
 using TheArchive.Core.ModulesAPI;
 using UnityEngine;
 
-namespace Hikaria.ResourceMarker.Managers
+namespace Hikaria.ItemMarker.Managers
 {
-    public static class ResourceMarkerManager
+    public static class ItemMarkerManager
     {
-        public static CustomSettings<Dictionary<uint, ResourceMarkerDescription>> ResourceMarkerDescriptions = new("ResourceMarkerDesciptions", new());
+        public static CustomSettings<Dictionary<uint, ResourceMarkerDescription>> ItemMarkerDescriptions = new("ItemMarkerDesciptions", new());
 
         public class ResourceMarkerDescription
         {
             public uint ItemID { get; set; } = 0U;
-            public string ItemName { get; set; } = string.Empty;
+            public string DataBlockName { get; set; } = string.Empty;
+            public string PublicName { get; set; } = string.Empty;
             public string Title { get; set; } = string.Empty;
             public SColor Color { get; set; } = UnityEngine.Color.white;
-            public VisibleCheckModeType VisibleCheckMode { get; set; } = VisibleCheckModeType.World;
+            public VisibleUpdateModeType VisibleUpdateMode { get; set; } = VisibleUpdateModeType.World;
             public float VisibleWorldDistance { get; set; } = 30f;
             public int VisibleCourseNodeDistance { get; set; } = 1;
             public float Alpha { get; set; } = 1f;
@@ -27,11 +28,12 @@ namespace Hikaria.ResourceMarker.Managers
             public string CustomIconPath { get; set; } = string.Empty;
         }
 
-        public enum VisibleCheckModeType
+        public enum VisibleUpdateModeType
         {
             World,
             CourseNode,
-            Zone
+            Zone,
+            Manual
         }
 
         public static bool TryGetCustomIcon(uint id, out Sprite sprite)
@@ -44,7 +46,7 @@ namespace Hikaria.ResourceMarker.Managers
             string iconDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Assets/icons");
             if (!Directory.Exists(iconDir))
                 Directory.CreateDirectory(iconDir);
-            foreach (var pair in ResourceMarkerDescriptions.Value)
+            foreach (var pair in ItemMarkerDescriptions.Value)
             {
                 var id = pair.Key;
                 var desc = pair.Value;

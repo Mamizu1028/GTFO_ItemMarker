@@ -2,9 +2,9 @@
 using Player;
 using UnityEngine;
 
-namespace Hikaria.ResourceMarker.Handlers
+namespace Hikaria.ItemMarker.Handlers
 {
-    public class ResourceScanner : MonoBehaviour
+    public class ItemScanner : MonoBehaviour
     {
         private bool m_isLocal;
         private PlayerAgent m_playerAgent;
@@ -32,9 +32,11 @@ namespace Hikaria.ResourceMarker.Handlers
                 return;
             for (int i = 0; i < s_collCount; i++)
             {
-                var marker = m_hits[i].collider.GetComponentInParent<ResourceNavMarkerWrapper>();
+                var marker = m_hits[i].collider.GetComponentInParent<ItemNavMarkerWrapper>();
                 if (marker != null && marker.AllowDiscoverCheck && !marker.IsDiscovered)
+                {
                     marker.IsDiscovered = true;
+                }
             }
         }
     }

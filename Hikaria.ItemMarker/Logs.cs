@@ -1,7 +1,7 @@
 ﻿using TheArchive.Interfaces;
 using TheArchive.Loader;
 
-namespace Hikaria.ResourceMarker
+namespace Hikaria.ItemMarker
 {
     internal static class Logs
     {

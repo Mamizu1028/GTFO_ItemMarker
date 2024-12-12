@@ -3,7 +3,7 @@ using TheArchive.Core.Attributes;
 using TheArchive.Core.FeaturesAPI;
 using TheArchive.Core.Localization;
 
-namespace Hikaria.ResourceMarker
+namespace Hikaria.ItemMarker
 {
     [ArchiveDependency(Core.PluginInfo.GUID)]
     [ArchiveModule(PluginInfo.GUID, PluginInfo.NAME, PluginInfo.VERSION)]
@@ -15,10 +15,10 @@ namespace Hikaria.ResourceMarker
 
         public ArchiveLegacyPatcher Patcher { get; set; }
 
-        public string ModuleGroup => FeatureGroups.GetOrCreateModuleGroup("Resource Marker", new()
+        public string ModuleGroup => FeatureGroups.GetOrCreateModuleGroup("Item Marker", new()
         {
-            { Language.English, "Resource Marker" },
-            { Language.Chinese, "资源标记" }
+            { Language.English, "Item Marker" },
+            { Language.Chinese, "物品标记" }
         });
 
         public void Init()
