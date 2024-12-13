@@ -132,8 +132,10 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(ItemInLevel __instance)
             {
-                if (__instance.GetComponent<ItemNavMarkerWrapper>() == null)
-                    __instance.gameObject.AddComponent<ItemNavMarkerWrapper>();
+                if (__instance.PickupInteraction == null)
+                    return;
+                if (__instance.PickupInteraction.GetComponent<ItemNavMarkerWrapper>() == null)
+                    __instance.PickupInteraction.gameObject.AddComponent<ItemNavMarkerWrapper>().Setup(__instance);
             }
         }
 
@@ -154,7 +156,7 @@ namespace Hikaria.ItemMarker.Features
                     var colliders = Physics.OverlapSphere(newState.worldPos, 0.01f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
                     foreach (var collider in colliders)
                     {
-                        var marker = collider.GetComponentInParent<ItemNavMarkerWrapper>();
+                        var marker = collider.GetComponent<ItemNavMarkerWrapper>();
                         if (marker == null)
                             continue;
                         marker.OnPlayerPing();

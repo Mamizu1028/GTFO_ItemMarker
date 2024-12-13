@@ -13,16 +13,16 @@ namespace Hikaria.ItemMarker.Handlers
 {
     public class ItemNavMarkerWrapper : MonoBehaviour, IOnResetSession, IOnRecallComplete, IOnBufferCommand
     {
-        public void Awake()
+        public void Setup(ItemInLevel item)
         {
-            m_item = GetComponent<ItemInLevel>();
+            m_item = item;
             var itemDataBlock = m_item.ItemDataBlock;
             if (!ValidSlots.Contains(itemDataBlock.inventorySlot))
             {
                 Destroy(this);
                 return;
             }
-            m_navMarkerPlacer = GetComponent<PlaceNavMarkerOnGO>();
+            m_navMarkerPlacer = m_item.GetComponent<PlaceNavMarkerOnGO>();
             m_itemSlot = itemDataBlock.inventorySlot;
             m_itemShowUses = !itemDataBlock.GUIShowAmmoInfinite && itemDataBlock.GUIShowAmmoTotalRel;
             var ammoType = PlayerAmmoStorage.GetAmmoTypeFromSlot(itemDataBlock.inventorySlot);
@@ -40,7 +40,7 @@ namespace Hikaria.ItemMarker.Handlers
 
             m_marker = GuiManager.NavMarkerLayer.PrepareGenericMarker(gameObject);
             m_markerStyle = GetComponentInChildren<iPlayerPingTarget>()?.PingTargetStyle ?? eNavMarkerStyle.PlayerPingLoot;
-            m_markerTitle = m_item.ItemDataBlock.publicName.Replace('_', ' ');
+            m_markerTitle = itemDataBlock.publicName.Replace('_', ' ');
             m_marker.SetTitle(m_markerTitle);
             m_marker.SetStyle(m_markerStyle);
             m_marker.SetIconScale(0.6f);
@@ -48,7 +48,7 @@ namespace Hikaria.ItemMarker.Handlers
             var size = m_marker.m_title.rectTransform.sizeDelta;
             size.x *= 2;
             m_marker.m_title.rectTransform.sizeDelta = size;
-            if (ItemMarkerDescriptions.Value.TryGetValue(m_item.ItemDataBlock.persistentID, out var desc))
+            if (ItemMarkerDescriptions.Value.TryGetValue(itemDataBlock.persistentID, out var desc))
             {
                 m_marker.SetColor(desc.Color);
                 m_markerTitle = desc.Title;
