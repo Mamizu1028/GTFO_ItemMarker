@@ -46,7 +46,7 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker.SetIconScale(0.6f);
             m_marker.SetAlpha(1f);
             var size = m_marker.m_title.rectTransform.sizeDelta;
-            size.x *= 2;
+            size.x *= 3;
             m_marker.m_title.rectTransform.sizeDelta = size;
             if (ItemMarkerDescriptions.Value.TryGetValue(itemDataBlock.persistentID, out var desc))
             {
@@ -73,7 +73,7 @@ namespace Hikaria.ItemMarker.Handlers
                 }
                 if (desc.AlwaysShowTitle)
                 {
-                    m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Title;
+                    m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Title | NavMarkerOption.Distance;
                 }
             }
 
