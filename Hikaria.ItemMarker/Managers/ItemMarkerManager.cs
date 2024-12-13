@@ -24,6 +24,7 @@ namespace Hikaria.ItemMarker.Managers
             public float IconScale { get; set; } = 0.5f;
             public float PingFadeOutTime { get; set; } = 12f;
             public bool AlwaysVisible { get; set; } = false;
+            public bool AlwaysShowTitle { get; set; } = false;
             public bool UseCustomIcon { get; set; } = false;
             public string CustomIconPath { get; set; } = string.Empty;
         }

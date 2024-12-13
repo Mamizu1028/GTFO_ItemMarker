@@ -71,6 +71,10 @@ namespace Hikaria.ItemMarker.Handlers
                         renderer.sprite = sprite;
                     }
                 }
+                if (desc.AlwaysShowTitle)
+                {
+                    m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Title;
+                }
             }
 
             IsDiscovered = false;
