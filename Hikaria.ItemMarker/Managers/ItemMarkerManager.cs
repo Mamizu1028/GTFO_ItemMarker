@@ -7,9 +7,9 @@ namespace Hikaria.ItemMarker.Managers
 {
     public static class ItemMarkerManager
     {
-        public static CustomSettings<Dictionary<uint, ResourceMarkerDescription>> ItemMarkerDescriptions = new("ItemMarkerDesciptions", new());
+        public static CustomSettings<Dictionary<uint, ItemMarkerDescription>> ItemMarkerDescriptions = new("ItemMarkerDesciptions", new());
 
-        public class ResourceMarkerDescription
+        public class ItemMarkerDescription
         {
             public uint ItemID { get; set; } = 0U;
             public string DataBlockName { get; set; } = string.Empty;

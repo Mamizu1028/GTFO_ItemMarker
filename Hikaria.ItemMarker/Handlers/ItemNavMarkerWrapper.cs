@@ -202,6 +202,14 @@ namespace Hikaria.ItemMarker.Handlers
                 return;
             }
 
+            if (m_itemSlot == InventorySlot.InLevelCarry)
+            {
+                if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                    m_marker.SetTitle($"{m_markerTitle} <color=red>[未拾起]</color>");
+                else
+                    m_marker.SetTitle(m_markerTitle);
+            }
+
             if (m_item.Get_pItemData().custom.byteState > 0) // CELL, HSU...
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
