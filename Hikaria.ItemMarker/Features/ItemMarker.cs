@@ -122,7 +122,6 @@ namespace Hikaria.ItemMarker.Features
                     foreach (var marker in __instance.GetComponentsInChildren<ItemNavMarkerWrapper>(true))
                     {
                         marker.IsDiscovered = true;
-                        marker.ManualUpdate();
                     }
                 }
             }
@@ -150,25 +149,7 @@ namespace Hikaria.ItemMarker.Features
                     return true;
 
                 bool flag = false;
-                if (newState.style == eNavMarkerStyle.PlayerPingResourceLocker)
-                {
-                    //var colliders = Physics.OverlapSphere(newState.worldPos, 0.01f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
-                    //foreach (var collider in colliders)
-                    //{
-                    //    var container = collider.GetComponentInParent<LG_WeakResourceContainer>();
-                    //    if (container == null)
-                    //        continue;
-                    //    var graphics = container.m_graphics.TryCast<LG_WeakResourceContainer_Graphics>();
-                    //    if (graphics == null || graphics.m_status != eResourceContainerStatus.Open)
-                    //        continue;
-                    //    foreach (var marker in container.GetComponentsInChildren<ResourceNavMarkerWrapper>())
-                    //    {
-                    //        marker.OnPlayerPing();
-                    //        flag = true;
-                    //    }
-                    //}
-                }
-                else if (newState.style != eNavMarkerStyle.PlayerPingLookat)
+                if (newState.style != eNavMarkerStyle.PlayerPingResourceLocker && newState.style != eNavMarkerStyle.PlayerPingResourceBox)
                 {
                     var colliders = Physics.OverlapSphere(newState.worldPos, 0.01f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
                     foreach (var collider in colliders)

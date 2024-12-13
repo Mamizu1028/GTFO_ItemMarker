@@ -36,7 +36,7 @@ namespace Hikaria.ItemMarker.Handlers
                 m_itemCostOfBullet = 20f;
             else
                 m_itemShowUses = false;
-            m_allowDiscoverCheck = m_item.container == null;
+            m_allowDiscoverCheck = m_item.container == null && (m_itemSlot != InventorySlot.InPocket && m_itemSlot != InventorySlot.Pickup);
 
             m_marker = GuiManager.NavMarkerLayer.PrepareGenericMarker(gameObject);
             m_markerStyle = GetComponentInChildren<iPlayerPingTarget>()?.PingTargetStyle ?? eNavMarkerStyle.PlayerPingLoot;
@@ -45,7 +45,9 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker.SetStyle(m_markerStyle);
             m_marker.SetIconScale(0.6f);
             m_marker.SetAlpha(1f);
-
+            var size = m_marker.m_title.rectTransform.sizeDelta;
+            size.x *= 2;
+            m_marker.m_title.rectTransform.sizeDelta = size;
             if (ItemMarkerDescriptions.Value.TryGetValue(m_item.ItemDataBlock.persistentID, out var desc))
             {
                 m_marker.SetColor(desc.Color);
