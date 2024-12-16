@@ -20,22 +20,18 @@ namespace Hikaria.ItemMarker.Handlers
         private void LateUpdate()
         {
             if (m_isLocal)
-            {
                 s_collCount = Physics.SphereCastNonAlloc(m_playerAgent.FPSCamera.Position, 3f, m_playerAgent.FPSCamera.CameraRayDir, m_hits, 0f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
-            }
             else
-            {
                 s_collCount = Physics.SphereCastNonAlloc(m_playerAgent.EyePosition, 2.5f, m_playerAgent.transform.forward, m_hits, 0.5f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
-            }
 
             if (s_collCount == 0)
                 return;
             for (int i = 0; i < s_collCount; i++)
             {
-                var marker = m_hits[i].collider.GetComponentInParent<ItemNavMarkerWrapper>();
-                if (marker != null && marker.AllowDiscoverCheck && !marker.IsDiscovered)
+                var marker = m_hits[i].collider.GetComponent<ItemMarkerTag>();
+                if (marker != null && marker.ItemMarker.AllowDiscoverScan && !marker.ItemMarker.IsDiscovered)
                 {
-                    marker.IsDiscovered = true;
+                    marker.ItemMarker.IsDiscovered = true;
                 }
             }
         }

@@ -1,14 +1,12 @@
 ﻿using AIGraph;
-using GameData;
 using Hikaria.ItemMarker.Handlers;
+using Hikaria.ItemMarker.Handlers.Markers;
 using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using TheArchive.Core.Attributes;
 using TheArchive.Core.FeaturesAPI;
-using TheArchive.Loader;
 using UnityEngine;
-using static Hikaria.ItemMarker.Managers.ItemMarkerManager;
 
 namespace Hikaria.ItemMarker.Features
 {
@@ -22,62 +20,38 @@ namespace Hikaria.ItemMarker.Features
 
         public override void Init()
         {
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemNavMarkerWrapper>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemScanner>();
+            IconManager.Init();
             ItemMarkerManager.Init();
-        }
-
-        public override void OnGameDataInitialized()
-        {
-            foreach (var block in ItemDataBlock.GetAllBlocks())
-            {
-                if (!ItemNavMarkerWrapper.ValidSlots.Contains(block.inventorySlot))
-                    continue;
-
-                if (!ItemMarkerDescriptions.Value.TryGetValue(block.persistentID, out var desc))
-                {
-                    desc = new()
-                    {
-                        ItemID = block.persistentID,
-                        DataBlockName = block.name,
-                        PublicName = block.publicName,
-                        Title = block.publicName.Replace('_', ' '),
-                        VisibleUpdateMode = ItemNavMarkerWrapper.GetDefaultUpdateModeForSlot(block.inventorySlot),
-                        AlwaysVisible = block.inventorySlot == InventorySlot.InLevelCarry
-                    };
-                    ItemMarkerDescriptions.Value[block.persistentID] = desc;
-                }
-                else
-                {
-                    desc.DataBlockName = block.name;
-                    desc.ItemID = block.persistentID;
-                    desc.PublicName = block.publicName;
-                }
-            }
         }
 
         public override void OnGameStateChanged(int state)
         {
             if (state != (int)eGameStateName.InLevel)
                 return;
-            foreach (var pair in ItemNavMarkerWrapper.ItemMarkerLookup)
-            {
-                pair.Value.UpdateItemUsesLeft();
-            }
+
+            ItemMarkerManager.SearchGameObject();
+        }
+
+        public override void OnGameDataInitialized()
+        {
+            ItemInLevelMarker.OnGameDataInitialized();
         }
 
         [ArchivePatch(typeof(PlayerAgent), nameof(PlayerAgent.CourseNode), null, ArchivePatch.PatchMethodType.Setter)]
         private class PlayerAgent__set_CourseNode__Patch
         {
-            private static AIG_CourseNode preNode;
             private static bool nodeChanged;
             private static bool zoneChanged;
+            private static bool dimensionChanged;
+            private static AIG_CourseNode preNode;
             private static void Prefix(PlayerAgent __instance, AIG_CourseNode value)
             {
                 if (!__instance.IsLocallyOwned)
                     return;
+                preNode = __instance.CourseNode;
                 nodeChanged = preNode?.NodeID != value?.NodeID;
                 zoneChanged = preNode?.m_zone.ID != value?.m_zone.ID;
+                dimensionChanged = preNode?.m_dimension.DimensionIndex != value?.m_dimension.DimensionIndex;
             }
 
             private static void Postfix(AIG_CourseNode value)
@@ -85,19 +59,19 @@ namespace Hikaria.ItemMarker.Features
                 if (nodeChanged)
                 {
                     nodeChanged = false;
-                    foreach (var marker in ItemNavMarkerWrapper.ItemMarkerModeLookup[VisibleUpdateModeType.CourseNode])
-                    {
-                        marker.ManualUpdate();
-                    }
+                    ItemMarkerManager.OnPlayerCourseNodeChanged(value);
                 }
 
                 if (zoneChanged)
                 {
                     zoneChanged = false;
-                    foreach (var marker in ItemNavMarkerWrapper.ItemMarkerModeLookup[VisibleUpdateModeType.Zone])
-                    {
-                        marker.ManualUpdate();
-                    }
+                    ItemMarkerManager.OnPlayerZoneChanged(value?.m_zone);
+                }
+
+                if (dimensionChanged)
+                {
+                    dimensionChanged = false;
+                    ItemMarkerManager.OnPlayerDimensionChanged(value?.m_dimension);
                 }
             }
         }
@@ -119,9 +93,9 @@ namespace Hikaria.ItemMarker.Features
             {
                 if (newState.status == eResourceContainerStatus.Open)
                 {
-                    foreach (var marker in __instance.GetComponentsInChildren<ItemNavMarkerWrapper>(true))
+                    foreach (var marker in __instance.GetComponentsInChildren<ItemMarkerTag>(true))
                     {
-                        marker.IsDiscovered = true;
+                        marker.ItemMarker.IsDiscovered = true;
                     }
                 }
             }
@@ -132,17 +106,15 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(ItemInLevel __instance)
             {
-                if (__instance.PickupInteraction == null)
-                    return;
-                if (__instance.PickupInteraction.GetComponent<ItemNavMarkerWrapper>() == null)
-                    __instance.PickupInteraction.gameObject.AddComponent<ItemNavMarkerWrapper>().Setup(__instance);
+                if (__instance.GetComponent<ItemInLevelMarker>() == null)
+                    __instance.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(__instance);
             }
         }
 
         [ArchivePatch(typeof(SyncedNavMarkerWrapper), nameof(SyncedNavMarkerWrapper.OnStateChange))]
         private class SyncedNavMarkerWrapper__OnStateChange__Patch
         {
-            private static bool Prefix(SyncedNavMarkerWrapper __instance, pNavMarkerState newState)
+            private static bool Prefix(SyncedNavMarkerWrapper __instance, pNavMarkerState oldState, pNavMarkerState newState)
             {
                 if (__instance.m_playerIndex == -1)
                     return true;
@@ -153,13 +125,13 @@ namespace Hikaria.ItemMarker.Features
                 bool flag = false;
                 if (newState.style != eNavMarkerStyle.PlayerPingResourceLocker && newState.style != eNavMarkerStyle.PlayerPingResourceBox)
                 {
-                    var colliders = Physics.OverlapSphere(newState.worldPos, 0.01f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
+                    var colliders = Physics.OverlapSphere(newState.worldPos, 0.001f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
                     foreach (var collider in colliders)
                     {
-                        var marker = collider.GetComponent<ItemNavMarkerWrapper>();
+                        var marker = collider.GetComponent<ItemMarkerTag>();
                         if (marker == null)
                             continue;
-                        marker.OnPlayerPing();
+                        marker.ItemMarker.OnPlayerPing();
                         flag = true;
                     }
                 }
@@ -173,10 +145,10 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_GenericTerminalItem __instance)
             {
-                var marker = __instance.GetComponentInParent<ItemNavMarkerWrapper>();
+                var marker = __instance.GetComponentInParent<ItemMarkerTag>();
                 if (marker == null)
                     return;
-                marker.OnTerminalPing();
+                marker.ItemMarker.OnTerminalPing();
             }
         }
 
@@ -185,13 +157,13 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(global::Item __result)
             {
-                var itemInLevel = __result.TryCast<ItemInLevel>();
+                var itemInLevel = __result?.TryCast<ItemInLevel>();
                 if (itemInLevel == null)
                     return;
                 if (itemInLevel.CourseNode != null)
                     return;
 
-                if (itemInLevel.internalSync.GetCurrentState().status != ePickupItemStatus.PlacedInLevel)
+                if (itemInLevel.internalSync == null || itemInLevel.internalSync.GetCurrentState().status != ePickupItemStatus.PlacedInLevel)
                     return;
 
                 if (itemInLevel.Get_pItemData().originCourseNode.TryGet(out var node))
@@ -229,38 +201,97 @@ namespace Hikaria.ItemMarker.Features
             }
         }
 
-        [ArchivePatch(typeof(LG_PickupItem_Sync), nameof(LG_PickupItem_Sync.OnStateChange))]
-        private class LG_PickupItem_Sync__OnStateChange__Patch
-        {
-            private static void Postfix(LG_PickupItem_Sync __instance, pPickupItemState newState)
-            {
-                var item = __instance.item.TryCast<ItemInLevel>();
-                if (item == null)
-                    return;
-                if (!ItemNavMarkerWrapper.ItemMarkerLookup.TryGetValue(item.GetInstanceID(), out var marker))
-                    return;
-
-                marker.UpdateItemUsesLeft();
-
-                if (newState.status == ePickupItemStatus.PlacedInLevel)
-                {
-                    marker.IsPlacedInLevel = true;
-                }
-                else if (newState.status == ePickupItemStatus.PickedUp)
-                {
-                    marker.IsPlacedInLevel = false;
-                }
-            }
-        }
 
         [ArchivePatch(typeof(CarryItemPickup_Core), nameof(CarryItemPickup_Core.PlacedInLevelCustomDataUpdate))]
         private class CarryItemPickup_Core__PlacedInLevelCustomDataUpdate__Patch
         {
-            private static void Postfix(CarryItemPickup_Core __instance)
+            private static void Postfix(CarryItemPickup_Core __instance, pItemData_Custom custom)
             {
-                if (!ItemNavMarkerWrapper.ItemMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
+                if (!ItemInLevelMarker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
                     return;
-                marker.ManualUpdate();
+                marker.OnItemCustomDataUpdate(custom);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.Setup))]
+        private class LG_ComputerTerminal__Setup__Patch
+        {
+            private static void Postfix(LG_ComputerTerminal __instance)
+            {
+                if (__instance.GetComponent<LG_ComputerTerminalMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_ComputerTerminalMarker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_GenericTerminalItem), nameof(LG_GenericTerminalItem.Setup))]
+        private class LG_GenericTerminalItem__Setup__Patch
+        {
+            private static void Postfix(LG_GenericTerminalItem __instance, string key)
+            {
+                ItemMarkerManager.SetTerminalItemKey(__instance.GetInstanceID(), key);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_WardenObjective_Reactor), nameof(LG_WardenObjective_Reactor.OnBuildDone))]
+        private class LG_WardenObjective_Reactor__OnBuildDone__Patch
+        {
+            private static void Postfix(LG_WardenObjective_Reactor __instance)
+            {
+                if (__instance.SpawnNode != null && __instance.m_terminal != null)
+                {
+                    if (!__instance.SpawnNode.m_zone.TerminalsSpawnedInZone.Contains(__instance.m_terminal))
+                        __instance.SpawnNode.m_zone.TerminalsSpawnedInZone.Add(__instance.m_terminal);
+                }
+            }
+        }
+
+        [ArchivePatch(typeof(LG_BulkheadDoorController_Core), nameof(LG_BulkheadDoorController_Core.Setup))]
+        private class LG_BulkheadDoorController_Core__Setup__Patch
+        {
+            private static void Postfix(LG_BulkheadDoorController_Core __instance)
+            {
+                if (__instance.GetComponent<LG_BulkheadDoorControllerMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_BulkheadDoorControllerMarker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_PowerGenerator_Core), nameof(LG_PowerGenerator_Core.Setup))]
+        private class LG_PowerGenerator_Core__Setup__Patch
+        {
+            private static void Postfix(LG_PowerGenerator_Core __instance)
+            {
+                if (__instance.GetComponent<LG_PowerGeneratorMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_PowerGeneratorMarker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_HSU), nameof(LG_HSU.Setup))]
+        private class LG_HSU__Setup__Patch
+        {
+            private static void Postfix(LG_HSU __instance)
+            {
+                if (__instance.GetComponent<LG_HSUMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSUMarker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_HSUActivator_Core), nameof(LG_HSUActivator_Core.SetupAsWardenObjective))]
+        private class LG_HSUActivator_Core__SetupAsWardenObjective__Patch
+        {
+            private static void Postfix(LG_HSUActivator_Core __instance)
+            {
+                if (__instance.GetComponent<LG_HSUActivatorMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSUActivatorMarker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_HSUActivator_Core), nameof(LG_HSUActivator_Core.SetupFromCustomGeomorph))]
+        private class LG_HSUActivator_Core__SetupFromCustomGeomorph__Patch
+        {
+            private static void Postfix(LG_HSUActivator_Core __instance)
+            {
+                if (__instance.GetComponent<LG_HSUActivatorMarker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSUActivatorMarker>().SetupNavMarker(__instance);
             }
         }
     }
