@@ -18,6 +18,14 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
         }
 
+        public override void OnManualUpdate()
+        {
+            if (m_station.m_interact.IsActive)
+                AttemptInteract(eNavMarkerInteractionType.Show);
+            else
+                AttemptInteract(eNavMarkerInteractionType.Hide);
+        }
+
         private LG_DisinfectionStation m_station;
     }
 }

@@ -22,22 +22,27 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         private void OnSyncStateChange(ePowerGeneratorStatus status)
         {
-            if (status == ePowerGeneratorStatus.Powered)
+            if (!IsDiscovered)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
             }
-            else if (status == ePowerGeneratorStatus.UnPowered)
-            {
+
+            if (m_gene.m_powerCellInteraction.Cast<LG_GenericCarryItemInteractionTarget>().isActiveAndEnabled)
                 AttemptInteract(eNavMarkerInteractionType.Show);
-            }
+            else
+                AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
         public override void OnManualUpdate()
         {
-            if (!IsDiscovered)
+            if (!m_gene.m_graphics.m_gfxSlot.active)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
-            if (m_gene.m_graphics.m_gfxSlot.active)
+            if (m_gene.m_powerCellInteraction.Cast<LG_GenericCarryItemInteractionTarget>().isActiveAndEnabled)
                 AttemptInteract(eNavMarkerInteractionType.Show);
             else
                 AttemptInteract(eNavMarkerInteractionType.Hide);

@@ -60,19 +60,28 @@ namespace Hikaria.ItemMarker.Managers
             _itemMarkers.Add(il2CppType, Il2CppType.Of<T>(true));
         }
 
-        internal static void RegisterTerminalItemKeySetter(int instanceId, ItemMarkerBase itemMarker)
+        internal static void RegisterTerminalItemMarker(int instanceId, ItemMarkerBase marker)
         {
-            if (!_terminalItemKeySetters.TryGetValue(instanceId, out var setters))
+            if (!_terminalItemMarkers.TryGetValue(instanceId, out var markers))
             {
-                setters = new();
-                _terminalItemKeySetters[instanceId] = setters;
+                markers = new();
+                _terminalItemMarkers[instanceId] = markers;
             }
-            setters.Add(itemMarker);
+            markers.Add(marker);
+        }
+
+        internal static void OnTerminalPing(int instanceId)
+        {
+            if (_terminalItemMarkers.TryGetValue(instanceId, out var markers))
+            {
+                foreach (var marker in markers)
+                    marker.OnTerminalPing();
+            }
         }
 
         internal static void SetTerminalItemKey(int instanceId, string key)
         {
-            if (_terminalItemKeySetters.TryGetValue(instanceId, out var setters))
+            if (_terminalItemMarkers.TryGetValue(instanceId, out var setters))
             {
                 foreach (var setter in setters)
                 {
@@ -123,7 +132,7 @@ namespace Hikaria.ItemMarker.Managers
 
         private static readonly Dictionary<Il2CppSystem.Type, Il2CppSystem.Type> _itemMarkers = new();
         private static readonly HashSet<Il2CppSystem.Type> _typesToInspect = new();
-        private static readonly Dictionary<int, HashSet<ItemMarkerBase>> _terminalItemKeySetters = new();
+        private static readonly Dictionary<int, HashSet<ItemMarkerBase>> _terminalItemMarkers = new();
         private static readonly Dictionary<ItemMarkerVisibleUpdateModeType, HashSet<ItemMarkerBase>> ItemMarkerAutoUpdateModeLookup = new()
         {
             { ItemMarkerVisibleUpdateModeType.World, new() },

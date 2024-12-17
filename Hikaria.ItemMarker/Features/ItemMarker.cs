@@ -145,10 +145,7 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_GenericTerminalItem __instance)
             {
-                var marker = __instance.GetComponentInParent<ItemMarkerTag>();
-                if (marker == null)
-                    return;
-                marker.ItemMarker.OnTerminalPing();
+                ItemMarkerManager.OnTerminalPing(__instance.GetInstanceID());
             }
         }
 

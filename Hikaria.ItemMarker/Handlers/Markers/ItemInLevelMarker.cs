@@ -54,7 +54,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     if (m_terminalItem != null)
                     {
                         m_markerTitle = m_terminalItem.TerminalItemKey;
-                        TerminalItemInstanceID = m_terminalItem.GetInstanceID();
                     }
                 }
                 if (desc.UsePublicName)
@@ -256,6 +255,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     AttemptInteract(eNavMarkerInteractionType.Hide);
                     return;
                 }
+
+                if (!m_item.Cast<CarryItemPickup_Core>().IsInteractable)
+                {
+                    AttemptInteract(eNavMarkerInteractionType.Hide);
+                    return;
+                }
             }
 
             if (!IsDiscovered)
@@ -310,7 +315,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public int VisibleCourseNodeDistance { get; set; } = 1;
             public float Alpha { get; set; } = 0.9f;
             public float AlphaADS { get; set; } = 0.4f;
-            public float IconScale { get; set; } = 0.5f;
+            public float IconScale { get; set; } = 0.4f;
             public float PingFadeOutTime { get; set; } = 12f;
             public bool AlwaysShowTitle { get; set; } = false;
             public bool AlwaysShowDistance { get; set; } = false;

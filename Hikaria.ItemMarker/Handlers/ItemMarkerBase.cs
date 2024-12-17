@@ -28,9 +28,11 @@ namespace Hikaria.ItemMarker.Handlers
             if (!enabled)
                 CoroutineManager.StartPersistantCoroutine(UpdateMarkerAlphaCoroutine().WrapToIl2Cpp());
             GameEventAPI.RegisterListener(this);
-            if (TerminalItemInstanceID != 0)
-                ItemMarkerManager.RegisterTerminalItemKeySetter(TerminalItemInstanceID, this);
             ItemMarkerManager.RegisterItemMarkerAutoUpdate(this);
+            if (m_terminalItem != null)
+            {
+                ItemMarkerManager.RegisterTerminalItemMarker(m_terminalItem.GetInstanceID(), this);
+            }
         }
 
         public virtual void SetupNavMarker(Component comp)
@@ -44,6 +46,7 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker.SetIconScale(m_markerIconScale);
             m_marker.SetColor(m_markerColor);
             m_marker.SetVisible(false);
+            m_marker.m_title.fontSizeMax = m_markerTitleFontSizeMax;
             m_terminalItem ??= comp.GetComponentInChildren<LG_GenericTerminalItem>();
             if (!string.IsNullOrEmpty(m_markerTitle))
                 m_marker.SetTitle(m_markerTitle);
@@ -190,7 +193,8 @@ namespace Hikaria.ItemMarker.Handlers
             if (LocalPlayerAgent == null)
                 return;
 
-            OnWorldUpdate();
+            if (m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World)
+                OnWorldUpdate();
         }
 
         public virtual void OnWorldUpdate()
@@ -347,7 +351,16 @@ namespace Hikaria.ItemMarker.Handlers
             }
         }
 
-        public PlayerAgent LocalPlayerAgent => m_localPlayer ??= PlayerManager.GetLocalPlayerAgent();
+        public PlayerAgent LocalPlayerAgent
+        {
+            get
+            {
+                if (m_localPlayer == null)
+                    m_localPlayer = PlayerManager.GetLocalPlayerAgent();
+                return m_localPlayer;
+            }
+        }
+
         public virtual bool AllowDiscoverScan => !m_isDiscovered;
         public virtual AIG_CourseNode CourseNode => m_terminalItem.SpawnNode;
 
@@ -366,7 +379,8 @@ namespace Hikaria.ItemMarker.Handlers
         protected Color m_markerColor = Color.white;
         protected string m_markerTitle = string.Empty;
         protected eNavMarkerStyle m_markerStyle = eNavMarkerStyle.LocationBeacon;
-        protected float m_markerIconScale = 0.5f;
+        protected float m_markerIconScale = 0.4f;
+        protected int m_markerTitleFontSizeMax = 50;
 
         protected LG_GenericTerminalItem m_terminalItem;
         protected GameObject m_trackingObj;
