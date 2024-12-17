@@ -10,6 +10,8 @@ namespace Hikaria.ItemMarker.Managers
 {
     public static class ItemMarkerManager
     {
+        public static bool DevMode { get; set; } = false;
+
         internal static void Init()
         {
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemMarkerTag>();

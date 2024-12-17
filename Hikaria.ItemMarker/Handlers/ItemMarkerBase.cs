@@ -20,10 +20,6 @@ namespace Hikaria.ItemMarker.Handlers
                 Destroy(this);
                 return;
             }
-            var size = m_marker.m_title.rectTransform.sizeDelta;
-            size.x *= 3;
-            m_marker.m_title.rectTransform.sizeDelta = size;
-
             enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World;
             if (!enabled)
                 CoroutineManager.StartPersistantCoroutine(UpdateMarkerAlphaCoroutine().WrapToIl2Cpp());
@@ -365,8 +361,6 @@ namespace Hikaria.ItemMarker.Handlers
         public virtual AIG_CourseNode CourseNode => m_terminalItem.SpawnNode;
 
         internal ItemMarkerVisibleUpdateModeType VisibleUpdateMode => m_markerVisibleUpdateMode;
-
-        public int TerminalItemInstanceID { get; protected set; } = 0;
 
         protected bool m_markerAlwaysShowTitle = false;
         protected bool m_markerAlwaysShowDistance = false;
