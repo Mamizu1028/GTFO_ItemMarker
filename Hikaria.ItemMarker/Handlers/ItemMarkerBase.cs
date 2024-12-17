@@ -3,7 +3,6 @@ using BepInEx.Unity.IL2CPP.Utils.Collections;
 using Hikaria.Core;
 using Hikaria.Core.Interfaces;
 using Hikaria.ItemMarker.Managers;
-using Il2CppSystem.Security.Util;
 using LevelGeneration;
 using Player;
 using SNetwork;
@@ -212,7 +211,7 @@ namespace Hikaria.ItemMarker.Handlers
             UpdateMarkerAlpha();
         }
 
-        protected void ForceUpdate()
+        public void ForceUpdate()
         {
             if (m_marker == null)
                 return;

@@ -28,6 +28,13 @@ namespace Hikaria.ItemMarker.Managers
                                 CoroutineManager.StartCoroutine(UpdateDevMode(marker).WrapToIl2Cpp());
                         }
                     }
+                    else
+                    {
+                        foreach (var marker in _allItemMarkers)
+                        {
+                            marker.ForceUpdate();
+                        }
+                    }
                 }
             }
         }

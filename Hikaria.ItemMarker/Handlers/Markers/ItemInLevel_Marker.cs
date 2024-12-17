@@ -222,6 +222,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
                 {
                     AttemptInteract(eNavMarkerInteractionType.Show);
+                    if (m_itemShowUses)
+                        m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                    else
+                        m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
                     return;
                 }
                 if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
