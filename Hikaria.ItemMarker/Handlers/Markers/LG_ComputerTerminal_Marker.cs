@@ -26,7 +26,16 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnDevUpdate()
         {
-            OnPlayerZoneChanged(LocalPlayerAgent?.CourseNode?.m_zone);
+            var zone = LocalPlayerAgent?.CourseNode?.m_zone;
+            if (zone == null)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
+            }
+            if (CourseNode.m_zone.ID == zone.ID)
+                AttemptInteract(eNavMarkerInteractionType.Show);
+            else
+                AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
         private LG_ComputerTerminal m_terminal;

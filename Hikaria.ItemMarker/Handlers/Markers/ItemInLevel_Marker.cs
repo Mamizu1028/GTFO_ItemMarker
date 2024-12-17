@@ -288,7 +288,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 }
                 else
                 {
-                    UpdateItemUsesLeft();
                     ForceUpdate();
                 }
             }
@@ -296,6 +295,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnManualUpdate()
         {
+            UpdateItemUsesLeft();
             if (m_itemSlot == InventorySlot.InLevelCarry)
             {
                 m_navMarkerPlacer?.m_marker?.SetVisible(false);
