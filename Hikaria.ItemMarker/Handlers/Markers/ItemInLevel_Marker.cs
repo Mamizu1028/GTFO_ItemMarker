@@ -231,7 +231,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
                 {
                     AttemptInteract(eNavMarkerInteractionType.Show);
-                    m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
+                    if (m_itemShowUses)
+                        m_marker.SetTitle($"$<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                    else
+                        m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
                     return;
                 }
             }

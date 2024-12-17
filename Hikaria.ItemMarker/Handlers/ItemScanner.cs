@@ -29,7 +29,7 @@ namespace Hikaria.ItemMarker.Handlers
             for (int i = 0; i < s_collCount; i++)
             {
                 var marker = m_hits[i].collider.GetComponent<ItemMarkerTag>();
-                if (marker != null && marker.ItemMarker.AllowDiscoverScan && !marker.ItemMarker.IsDiscovered)
+                if (marker != null && marker.ItemMarker.AllowDiscoverScan)
                 {
                     marker.ItemMarker.IsDiscovered = true;
                 }
