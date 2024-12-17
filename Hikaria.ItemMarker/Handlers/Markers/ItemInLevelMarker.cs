@@ -24,10 +24,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             }
             m_item.internalSync.add_OnSyncStateChange((Action<ePickupItemStatus, pPickupPlacement, PlayerAgent, bool>)OnItemStateChange);
             m_navMarkerPlacer = m_item.GetComponent<PlaceNavMarkerOnGO>();
-            if (m_navMarkerPlacer?.m_marker != null)
-            {
-                GuiManager.NavMarkerLayer.RemoveMarker(m_navMarkerPlacer.m_marker);
-            }
             m_itemSlot = itemDataBlock.inventorySlot;
             m_itemShowUses = !itemDataBlock.GUIShowAmmoInfinite && itemDataBlock.GUIShowAmmoTotalRel;
             switch (PlayerAmmoStorage.GetAmmoTypeFromSlot(itemDataBlock.inventorySlot))
@@ -63,11 +59,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 }
                 if (desc.UsePublicName)
                 {
-                    var woItem = m_item.TryCast<iWardenObjectiveItem>();
-                    if (woItem != null)
-                        m_markerTitle = woItem.PublicName;
-                    else
-                        m_markerTitle = m_item.PublicName;
+                    m_markerTitle = m_item.PublicName;
                 }
                 m_markerVisibleUpdateMode = desc.VisibleUpdateMode;
                 m_markerVisibleWorldDistance = desc.VisibleWorldDistance;
@@ -229,6 +221,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             set
             {
                 m_isPlacedInLevel = value;
+                m_navMarkerPlacer?.m_marker?.SetVisible(false);
                 if (!value)
                 {
                     m_markerForceVisibleTimer = 0f;
@@ -251,13 +244,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         {
             if (m_itemSlot == InventorySlot.InLevelCarry)
             {
-                if (m_itemSlot == InventorySlot.InLevelCarry)
-                {
-                    if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                        m_marker.SetTitle($"{m_markerTitle} <size=75%><color=red>未拾起</color></size>");
-                    else
-                        m_marker.SetTitle(m_markerTitle);
-                }
+                m_navMarkerPlacer?.m_marker?.SetVisible(false);
+
+                if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                    m_marker.SetTitle($"{m_markerTitle} <size=75%><color=red>未拾起</color></size>");
+                else
+                    m_marker.SetTitle(m_markerTitle);
 
                 if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
                 {
@@ -311,7 +303,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public string PublicName { get; set; } = string.Empty;
             public string Title { get; set; } = string.Empty;
             public bool UseTerminalItemKey { get; set; } = false;
-            public bool UsePublicName { get; set; } = true;
+            public bool UsePublicName { get; set; } = false;
             public SColor Color { get; set; } = UnityEngine.Color.white;
             public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.World;
             public float VisibleWorldDistance { get; set; } = 30f;

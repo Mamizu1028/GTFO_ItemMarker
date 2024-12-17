@@ -101,15 +101,15 @@ namespace Hikaria.ItemMarker.Features
             }
         }
 
-        [ArchivePatch(typeof(ItemInLevel), nameof(ItemInLevel.Setup))]
-        private class ItemInLevel__Setup__Patch
-        {
-            private static void Postfix(ItemInLevel __instance)
-            {
-                if (__instance.GetComponent<ItemInLevelMarker>() == null)
-                    __instance.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(__instance);
-            }
-        }
+        //[ArchivePatch(typeof(ItemInLevel), nameof(ItemInLevel.Setup))]
+        //private class ItemInLevel__Setup__Patch
+        //{
+        //    private static void Postfix(ItemInLevel __instance)
+        //    {
+        //        if (__instance.GetComponent<ItemInLevelMarker>() == null)
+        //            __instance.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(__instance);
+        //    }
+        //}
 
         [ArchivePatch(typeof(SyncedNavMarkerWrapper), nameof(SyncedNavMarkerWrapper.OnStateChange))]
         private class SyncedNavMarkerWrapper__OnStateChange__Patch
@@ -160,6 +160,10 @@ namespace Hikaria.ItemMarker.Features
                 var itemInLevel = __result?.TryCast<ItemInLevel>();
                 if (itemInLevel == null)
                     return;
+
+                if (itemInLevel.GetComponent<ItemInLevelMarker>() == null)
+                    itemInLevel.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(itemInLevel);
+
                 if (itemInLevel.CourseNode != null)
                     return;
 
