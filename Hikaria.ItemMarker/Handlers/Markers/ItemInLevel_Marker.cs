@@ -85,7 +85,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
 
             if (m_itemSlot == InventorySlot.InLevelCarry)
-                m_marker.SetTitle($"{m_markerTitle} <size=75%><color=red>未拾起</color></size>");
+                m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
         }
 
 
