@@ -34,7 +34,7 @@ namespace Hikaria.ItemMarker.Features
 
         public override void OnGameDataInitialized()
         {
-            ItemInLevelMarker.OnGameDataInitialized();
+            ItemInLevel_Marker.OnGameDataInitialized();
         }
 
         [ArchivePatch(typeof(PlayerAgent), nameof(PlayerAgent.CourseNode), null, ArchivePatch.PatchMethodType.Setter)]
@@ -101,16 +101,6 @@ namespace Hikaria.ItemMarker.Features
             }
         }
 
-        //[ArchivePatch(typeof(ItemInLevel), nameof(ItemInLevel.Setup))]
-        //private class ItemInLevel__Setup__Patch
-        //{
-        //    private static void Postfix(ItemInLevel __instance)
-        //    {
-        //        if (__instance.GetComponent<ItemInLevelMarker>() == null)
-        //            __instance.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(__instance);
-        //    }
-        //}
-
         [ArchivePatch(typeof(SyncedNavMarkerWrapper), nameof(SyncedNavMarkerWrapper.OnStateChange))]
         private class SyncedNavMarkerWrapper__OnStateChange__Patch
         {
@@ -158,8 +148,8 @@ namespace Hikaria.ItemMarker.Features
                 if (itemInLevel == null)
                     return;
 
-                if (itemInLevel.GetComponent<ItemInLevelMarker>() == null)
-                    itemInLevel.gameObject.AddComponent<ItemInLevelMarker>().SetupNavMarker(itemInLevel);
+                if (itemInLevel.GetComponent<ItemInLevel_Marker>() == null)
+                    itemInLevel.gameObject.AddComponent<ItemInLevel_Marker>().SetupNavMarker(itemInLevel);
 
                 if (itemInLevel.CourseNode != null)
                     return;
@@ -202,13 +192,12 @@ namespace Hikaria.ItemMarker.Features
             }
         }
 
-
         [ArchivePatch(typeof(CarryItemPickup_Core), nameof(CarryItemPickup_Core.PlacedInLevelCustomDataUpdate))]
         private class CarryItemPickup_Core__PlacedInLevelCustomDataUpdate__Patch
         {
             private static void Postfix(CarryItemPickup_Core __instance, pItemData_Custom custom)
             {
-                if (!ItemInLevelMarker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
+                if (!ItemInLevel_Marker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
                     return;
                 marker.OnItemCustomDataUpdate(custom);
             }
@@ -219,8 +208,8 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_ComputerTerminal __instance)
             {
-                if (__instance.GetComponent<LG_ComputerTerminalMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_ComputerTerminalMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_ComputerTerminal_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_ComputerTerminal_Marker>().SetupNavMarker(__instance);
             }
         }
 
@@ -229,7 +218,7 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_GenericTerminalItem __instance, string key)
             {
-                ItemMarkerManager.SetTerminalItemKey(__instance.GetInstanceID(), key);
+                ItemMarkerManager.OnTerminalItemKeyUpdate(__instance.GetInstanceID(), key);
             }
         }
 
@@ -251,8 +240,8 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_BulkheadDoorController_Core __instance)
             {
-                if (__instance.GetComponent<LG_BulkheadDoorControllerMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_BulkheadDoorControllerMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_BulkheadDoorController_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_BulkheadDoorController_Marker>().SetupNavMarker(__instance);
             }
         }
 
@@ -261,8 +250,8 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_PowerGenerator_Core __instance)
             {
-                if (__instance.GetComponent<LG_PowerGeneratorMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_PowerGeneratorMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_PowerGenerator_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_PowerGenerator_Marker>().SetupNavMarker(__instance);
             }
         }
 
@@ -271,8 +260,8 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_HSU __instance)
             {
-                if (__instance.GetComponent<LG_HSUMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_HSUMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_HSU_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSU_Marker>().SetupNavMarker(__instance);
             }
         }
 
@@ -281,8 +270,8 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_HSUActivator_Core __instance)
             {
-                if (__instance.GetComponent<LG_HSUActivatorMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_HSUActivatorMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_HSUActivator_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSUActivator_Marker>().SetupNavMarker(__instance);
             }
         }
 
@@ -291,8 +280,38 @@ namespace Hikaria.ItemMarker.Features
         {
             private static void Postfix(LG_HSUActivator_Core __instance)
             {
-                if (__instance.GetComponent<LG_HSUActivatorMarker>() == null)
-                    __instance.gameObject.AddComponent<LG_HSUActivatorMarker>().SetupNavMarker(__instance);
+                if (__instance.GetComponent<LG_HSUActivator_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_HSUActivator_Marker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_SecurityDoor_Locks), nameof(LG_SecurityDoor_Locks.SetupForBulkheadDC))]
+        private class LG_SecurityDoor_Locks__SetupForBulkheadDC__Patch
+        {
+            private static void Postfix(LG_SecurityDoor_Locks __instance)
+            {
+                if (__instance.GetComponent<LG_SecurityDoor_Locks_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_SecurityDoor_Locks_Marker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_SecurityDoor_Locks), nameof(LG_SecurityDoor_Locks.SetupForGateKey))]
+        private class LG_SecurityDoor_Locks__SetupForGateKey__Patch
+        {
+            private static void Postfix(LG_SecurityDoor_Locks __instance)
+            {
+                if (__instance.GetComponent<LG_SecurityDoor_Locks_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_SecurityDoor_Locks_Marker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_SecurityDoor_Locks), nameof(LG_SecurityDoor_Locks.SetupForPowerGenerator))]
+        private class LG_SecurityDoor_Locks__SetupForPowerGenerator__Patch
+        {
+            private static void Postfix(LG_SecurityDoor_Locks __instance)
+            {
+                if (__instance.GetComponent<LG_SecurityDoor_Locks_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_SecurityDoor_Locks_Marker>().SetupNavMarker(__instance);
             }
         }
     }

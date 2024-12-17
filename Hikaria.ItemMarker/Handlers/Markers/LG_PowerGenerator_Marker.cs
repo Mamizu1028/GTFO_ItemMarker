@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Hikaria.ItemMarker.Handlers.Markers
 {
-    public class LG_PowerGeneratorMarker : ItemMarkerBase
+    public class LG_PowerGenerator_Marker : ItemMarkerBase
     {
         public override void SetupNavMarker(Component comp)
         {
@@ -34,7 +34,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
-        public override void OnManualUpdate()
+        protected override void OnManualUpdate()
         {
             if (!m_gene.m_graphics.m_gfxSlot.active)
             {
@@ -46,6 +46,11 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 AttemptInteract(eNavMarkerInteractionType.Show);
             else
                 AttemptInteract(eNavMarkerInteractionType.Hide);
+        }
+
+        protected override void OnDevUpdate()
+        {
+            OnManualUpdate();
         }
 
         private LG_PowerGenerator_Core m_gene;

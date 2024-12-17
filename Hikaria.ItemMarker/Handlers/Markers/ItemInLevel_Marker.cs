@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Hikaria.ItemMarker.Handlers.Markers
 {
-    public class ItemInLevelMarker : ItemMarkerBase, IOnGameStateChanged
+    public class ItemInLevel_Marker : ItemMarkerBase, IOnGameStateChanged
     {
         public override void SetupNavMarker(Component comp)
         {
@@ -49,16 +49,15 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             {
                 m_markerColor = desc.Color;
                 m_markerTitle = desc.Title;
-                if (desc.UseTerminalItemKey)
-                {
-                    if (m_terminalItem != null)
-                    {
-                        m_markerTitle = m_terminalItem.TerminalItemKey;
-                    }
-                }
                 if (desc.UsePublicName)
                 {
                     m_markerTitle = m_item.PublicName;
+                }
+                if (desc.UseTerminalItemKey)
+                {
+                    m_markerTitleUseTerminalItemKey = true;
+                    if (m_terminalItem != null)
+                        m_markerTitle = m_terminalItem.TerminalItemKey;
                 }
                 m_markerVisibleUpdateMode = desc.VisibleUpdateMode;
                 m_markerVisibleWorldDistance = desc.VisibleWorldDistance;
@@ -86,13 +85,11 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
 
             if (m_itemSlot == InventorySlot.InLevelCarry)
-            {
                 m_marker.SetTitle($"{m_markerTitle} <size=75%><color=red>未拾起</color></size>");
-            }
         }
 
 
-        public override void Update()
+        protected override void Update()
         {
             if (!IsPlacedInLevel)
                 return;
@@ -100,7 +97,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.Update();
         }
 
-        public override void OnDestroy()
+        protected override void OnDestroy()
         {
             ItemInLevelMarkerLookup.Remove(m_item.GetInstanceID());
 
@@ -184,6 +181,60 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             }
         }
 
+        protected override void OnDevUpdate()
+        {
+            if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
+            }
+
+            if (LocalPlayerAgent == null || LocalPlayerAgent.CourseNode == null || CourseNode == null)
+                return;
+
+            if (m_itemSlot == InventorySlot.InLevelCarry)
+            {
+                m_navMarkerPlacer?.m_marker?.SetVisible(false);
+
+                if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                    m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
+                else
+                    m_marker.SetTitle(m_markerTitle);
+
+                if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
+                {
+                    AttemptInteract(eNavMarkerInteractionType.Hide);
+                    return;
+                }
+
+                if (!m_item.Cast<CarryItemPickup_Core>().IsInteractable)
+                {
+                    AttemptInteract(eNavMarkerInteractionType.Hide);
+                    return;
+                }
+
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+
+            if (m_itemSlot == InventorySlot.ResourcePack || m_itemSlot == InventorySlot.Consumable)
+            {
+                if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
+                {
+                    AttemptInteract(eNavMarkerInteractionType.Show);
+                    return;
+                }
+                if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
+                {
+                    AttemptInteract(eNavMarkerInteractionType.Show);
+                    m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
+                    return;
+                }
+            }
+
+            AttemptInteract(eNavMarkerInteractionType.Hide);
+        }
+
         protected override void CaptureToBuffer(eBufferType bufferType)
         {
             base.CaptureToBuffer(bufferType);
@@ -239,14 +290,14 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             }
         }
 
-        public override void OnManualUpdate()
+        protected override void OnManualUpdate()
         {
             if (m_itemSlot == InventorySlot.InLevelCarry)
             {
                 m_navMarkerPlacer?.m_marker?.SetVisible(false);
 
                 if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                    m_marker.SetTitle($"{m_markerTitle} <size=75%><color=red>未拾起</color></size>");
+                    m_marker.SetTitle($"{m_markerTitle}\n<color=red>未拾起</color>");
                 else
                     m_marker.SetTitle(m_markerTitle);
 
@@ -261,12 +312,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     AttemptInteract(eNavMarkerInteractionType.Hide);
                     return;
                 }
-            }
-
-            if (!IsDiscovered)
-            {
-                AttemptInteract(eNavMarkerInteractionType.Hide);
-                return;
             }
 
             if (!IsPlacedInLevel)
@@ -307,8 +352,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public string DataBlockName { get; set; } = string.Empty;
             public string PublicName { get; set; } = string.Empty;
             public string Title { get; set; } = string.Empty;
-            public bool UseTerminalItemKey { get; set; } = false;
             public bool UsePublicName { get; set; } = false;
+            public bool UseTerminalItemKey { get; set; } = false;
             public SColor Color { get; set; } = UnityEngine.Color.white;
             public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.World;
             public float VisibleWorldDistance { get; set; } = 30f;
@@ -323,7 +368,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public string CustomIconFileName { get; set; } = string.Empty;
         }
 
-        public static void OnGameDataInitialized()
+        internal static void OnGameDataInitialized()
         {
             foreach (var block in ItemDataBlock.GetAllBlocks())
             {
@@ -342,6 +387,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                         AlwaysShowTitle = block.inventorySlot == InventorySlot.InLevelCarry,
                         AlwaysShowDistance = block.inventorySlot == InventorySlot.InLevelCarry,
                         UsePublicName = block.inventorySlot == InventorySlot.InLevelCarry,
+                        UseTerminalItemKey = block.inventorySlot == InventorySlot.InPocket || block.inventorySlot == InventorySlot.Pickup,
                     };
                     ItemInLevelMarkerDescriptions.Value[block.persistentID] = desc;
                 }
@@ -372,6 +418,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         }
 
         private static readonly InventorySlot[] ValidItemSlots = { InventorySlot.ResourcePack, InventorySlot.Consumable, InventorySlot.Pickup, InventorySlot.InPocket, InventorySlot.InLevelCarry };
-        public static readonly Dictionary<int, ItemInLevelMarker> ItemInLevelMarkerLookup = new();
+        internal static readonly Dictionary<int, ItemInLevel_Marker> ItemInLevelMarkerLookup = new();
     }
 }

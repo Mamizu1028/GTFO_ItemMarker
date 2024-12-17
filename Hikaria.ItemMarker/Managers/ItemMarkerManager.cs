@@ -1,8 +1,10 @@
 ﻿using AIGraph;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using Hikaria.ItemMarker.Handlers;
 using Hikaria.ItemMarker.Handlers.Markers;
 using Il2CppInterop.Runtime;
 using LevelGeneration;
+using System.Collections;
 using TheArchive.Loader;
 using UnityEngine;
 
@@ -10,31 +12,49 @@ namespace Hikaria.ItemMarker.Managers
 {
     public static class ItemMarkerManager
     {
-        public static bool DevMode { get; set; } = false;
+        public static bool DevMode
+        {
+            get => _devMode;
+            set
+            {
+                if (_devMode != value)
+                {
+                    _devMode = value;
+                    if (_devMode)
+                    {
+                        foreach (var marker in _allItemMarkers)
+                        {
+                            if (!marker.enabled)
+                                CoroutineManager.StartCoroutine(UpdateDevMode(marker).WrapToIl2Cpp());
+                        }
+                    }
+                }
+            }
+        }
+        private static bool _devMode;
+
+        private static IEnumerator UpdateDevMode(ItemMarkerBase marker)
+        {
+            var yielder = new WaitForSecondsRealtime(0.2f);
+            while (DevMode)
+            {
+                marker.DoDevModeUpdate();
+                yield return yielder;
+            }
+        }
 
         internal static void Init()
         {
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemMarkerTag>();
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemScanner>();
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemMarkerBase>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemInLevelMarker>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_ComputerTerminalMarker>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_PowerGeneratorMarker>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_HSUMarker>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_HSUActivatorMarker>();
-            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_BulkheadDoorControllerMarker>();
-        }
-
-        internal static void InspectGameObject(GameObject go)
-        {
-            foreach (var type in _typesToInspect)
-            {
-                var target = go.GetComponentInChildren(type);
-                if (target == null)
-                    continue;
-                if (target.GetComponent<ItemMarkerBase>() == null)
-                    target.gameObject.AddComponent(_itemMarkers[type]).Cast<ItemMarkerBase>().SetupNavMarker(target);
-            }
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<ItemInLevel_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_ComputerTerminal_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_PowerGenerator_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_HSU_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_HSUActivator_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_BulkheadDoorController_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_SecurityDoor_Locks_Marker>();
         }
 
         internal static void SearchGameObject()
@@ -46,12 +66,10 @@ namespace Hikaria.ItemMarker.Managers
                     var target = obj.Cast<Component>();
                     if (target.GetComponent<ItemMarkerBase>() == null)
                     {
-                        var itemMarker = target.gameObject.AddComponent(_itemMarkers[type]).Cast<ItemMarkerBase>();
-                        itemMarker.SetupNavMarker(target);
+                        target.gameObject.AddComponent(_itemMarkers[type]).Cast<ItemMarkerBase>().SetupNavMarker(target);
                     }
                 }
             }
-
         }
 
         public static void RegisterItemMarker<C, T>() where C : Component where T : ItemMarkerBase
@@ -60,6 +78,19 @@ namespace Hikaria.ItemMarker.Managers
             _typesToInspect.Add(il2CppType);
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<T>();
             _itemMarkers.Add(il2CppType, Il2CppType.Of<T>(true));
+        }
+
+        internal static void RegisterItemMarker(ItemMarkerBase marker)
+        {
+            _allItemMarkers.Add(marker);
+
+            if (!marker.enabled)
+                CoroutineManager.StartCoroutine(UpdateDevMode(marker).WrapToIl2Cpp());
+        }
+
+        internal static void UnregisterItemMarker(ItemMarkerBase marker)
+        {
+            _allItemMarkers.Remove(marker);
         }
 
         internal static void RegisterTerminalItemMarker(int instanceId, ItemMarkerBase marker)
@@ -72,6 +103,17 @@ namespace Hikaria.ItemMarker.Managers
             markers.Add(marker);
         }
 
+        internal static void UnregisterTerminalItemMarker(int instanceId, ItemMarkerBase marker)
+        {
+            if (!_terminalItemMarkers.TryGetValue(instanceId, out var markers))
+            {
+                markers = new();
+                _terminalItemMarkers[instanceId] = markers;
+            }
+            markers.Remove(marker);
+        }
+
+
         internal static void OnTerminalPing(int instanceId)
         {
             if (_terminalItemMarkers.TryGetValue(instanceId, out var markers))
@@ -81,13 +123,13 @@ namespace Hikaria.ItemMarker.Managers
             }
         }
 
-        internal static void SetTerminalItemKey(int instanceId, string key)
+        internal static void OnTerminalItemKeyUpdate(int instanceId, string key)
         {
-            if (_terminalItemMarkers.TryGetValue(instanceId, out var setters))
+            if (_terminalItemMarkers.TryGetValue(instanceId, out var markers))
             {
-                foreach (var setter in setters)
+                foreach (var marker in markers)
                 {
-                    setter.SetTerminalItemKey(key);
+                    marker.OnTerminalItemKeyUpdate(key);
                 }
             }
         }
@@ -110,6 +152,14 @@ namespace Hikaria.ItemMarker.Managers
 
         internal static void OnPlayerCourseNodeChanged(AIG_CourseNode newNode)
         {
+            if (DevMode)
+            {
+                foreach (var marker in _allItemMarkers)
+                {
+                    marker.DoDevModeUpdate();
+                }
+                return;
+            }
             foreach (var marker in ItemMarkerAutoUpdateModeLookup[ItemMarkerVisibleUpdateModeType.CourseNode])
             {
                 marker.OnPlayerCourseNodeChanged(newNode);
@@ -118,6 +168,14 @@ namespace Hikaria.ItemMarker.Managers
 
         internal static void OnPlayerZoneChanged(LG_Zone newZone)
         {
+            if (DevMode)
+            {
+                foreach (var marker in _allItemMarkers)
+                {
+                    marker.DoDevModeUpdate();
+                }
+                return;
+            }
             foreach (var marker in ItemMarkerAutoUpdateModeLookup[ItemMarkerVisibleUpdateModeType.Zone])
             {
                 marker.OnPlayerZoneChanged(newZone);
@@ -126,6 +184,15 @@ namespace Hikaria.ItemMarker.Managers
 
         internal static void OnPlayerDimensionChanged(Dimension newDim)
         {
+            if (DevMode)
+            {
+                foreach (var marker in _allItemMarkers)
+                {
+                    marker.DoDevModeUpdate();
+                }
+                return;
+            }
+
             foreach (var marker in ItemMarkerAutoUpdateModeLookup[ItemMarkerVisibleUpdateModeType.Dimension])
             {
                 marker.OnPlayerDimensionChanged(newDim);
@@ -135,6 +202,8 @@ namespace Hikaria.ItemMarker.Managers
         private static readonly Dictionary<Il2CppSystem.Type, Il2CppSystem.Type> _itemMarkers = new();
         private static readonly HashSet<Il2CppSystem.Type> _typesToInspect = new();
         private static readonly Dictionary<int, HashSet<ItemMarkerBase>> _terminalItemMarkers = new();
+        private static readonly HashSet<ItemMarkerBase> _allItemMarkers = new();
+
         private static readonly Dictionary<ItemMarkerVisibleUpdateModeType, HashSet<ItemMarkerBase>> ItemMarkerAutoUpdateModeLookup = new()
         {
             { ItemMarkerVisibleUpdateModeType.World, new() },
@@ -142,6 +211,7 @@ namespace Hikaria.ItemMarker.Managers
             { ItemMarkerVisibleUpdateModeType.Zone, new() },
             { ItemMarkerVisibleUpdateModeType.Dimension, new() },
             { ItemMarkerVisibleUpdateModeType.Manual, new() },
+            { ItemMarkerVisibleUpdateModeType.Dev, new() },
         };
     }
 }

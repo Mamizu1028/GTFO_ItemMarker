@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Hikaria.ItemMarker.Handlers.Markers
 {
-    public class LG_BulkheadDoorControllerMarker : ItemMarkerBase
+    public class LG_BulkheadDoorController_Marker : ItemMarkerBase
     {
         public override void SetupNavMarker(Component comp)
         {
@@ -29,17 +29,19 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             AttemptInteract(eNavMarkerInteractionType.Show);
         }
 
-        public override void OnManualUpdate()
+        protected override void OnManualUpdate()
         {
-            if (!IsDiscovered)
-                return;
-
             if (m_bulkDc.m_stateReplicator.State.status == eBulkheadDCStatus.InactiveNoMoreInteraction)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
             }
             AttemptInteract(eNavMarkerInteractionType.Show);
+        }
+
+        protected override void OnDevUpdate()
+        {
+            OnManualUpdate();
         }
 
         private LG_BulkheadDoorController_Core m_bulkDc;

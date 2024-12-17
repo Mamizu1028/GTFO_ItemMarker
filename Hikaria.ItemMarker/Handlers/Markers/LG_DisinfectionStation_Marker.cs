@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Hikaria.ItemMarker.Handlers.Markers
 {
-    public class LG_DisinfectionStationMarker : ItemMarkerBase
+    public class LG_DisinfectionStation_Marker : ItemMarkerBase
     {
         public override void SetupNavMarker(Component comp)
         {
@@ -18,12 +18,17 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
         }
 
-        public override void OnManualUpdate()
+        protected override void OnManualUpdate()
         {
             if (m_station.m_interact.IsActive)
                 AttemptInteract(eNavMarkerInteractionType.Show);
             else
                 AttemptInteract(eNavMarkerInteractionType.Hide);
+        }
+
+        protected override void OnDevUpdate()
+        {
+            OnManualUpdate();
         }
 
         private LG_DisinfectionStation m_station;

@@ -3,6 +3,7 @@ using BepInEx.Unity.IL2CPP.Utils.Collections;
 using Hikaria.Core;
 using Hikaria.Core.Interfaces;
 using Hikaria.ItemMarker.Managers;
+using Il2CppSystem.Security.Util;
 using LevelGeneration;
 using Player;
 using SNetwork;
@@ -13,34 +14,13 @@ namespace Hikaria.ItemMarker.Handlers
 {
     public class ItemMarkerBase : MonoBehaviour, IOnResetSession, IOnRecallComplete, IOnBufferCommand
     {
-        protected virtual void Start()
-        {
-            if (m_marker == null)
-            {
-                Destroy(this);
-                return;
-            }
-            enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World;
-            if (!enabled)
-                CoroutineManager.StartPersistantCoroutine(UpdateMarkerAlphaCoroutine().WrapToIl2Cpp());
-            GameEventAPI.RegisterListener(this);
-            ItemMarkerManager.RegisterItemMarkerAutoUpdate(this);
-            if (m_terminalItem != null)
-            {
-                ItemMarkerManager.RegisterTerminalItemMarker(m_terminalItem.GetInstanceID(), this);
-            }
-        }
-
         public virtual void SetupNavMarker(Component comp)
         {
-            m_trackingObj ??= gameObject;
             m_marker ??= GuiManager.NavMarkerLayer.PrepareGenericMarker(comp.gameObject);
-            if (m_markerStyle == eNavMarkerStyle.LocationBeacon)
-                m_markerStyle = GetComponentInChildren<iPlayerPingTarget>(true)?.PingTargetStyle ?? eNavMarkerStyle.LocationBeacon;
-            m_marker.SetAlpha(m_markerAlpha);
             m_marker.SetStyle(m_markerStyle);
             m_marker.SetIconScale(m_markerIconScale);
             m_marker.SetColor(m_markerColor);
+            m_marker.SetAlpha(m_markerAlpha);
             m_marker.SetVisible(false);
             m_marker.m_title.fontSizeMax = m_markerTitleFontSizeMax;
             m_terminalItem ??= comp.GetComponentInChildren<LG_GenericTerminalItem>();
@@ -64,6 +44,15 @@ namespace Hikaria.ItemMarker.Handlers
                 if (collider.GetComponent<ItemMarkerTag>() == null)
                     collider.gameObject.AddComponent<ItemMarkerTag>().Setup(this);
             }
+
+            enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World;
+            if (!enabled)
+                CoroutineManager.StartCoroutine(UpdateMarkerAlphaCoroutine().WrapToIl2Cpp());
+            GameEventAPI.RegisterListener(this);
+            ItemMarkerManager.RegisterItemMarkerAutoUpdate(this);
+            if (m_terminalItem != null)
+                ItemMarkerManager.RegisterTerminalItemMarker(m_terminalItem.GetInstanceID(), this);
+            ItemMarkerManager.RegisterItemMarker(this);
         }
 
         public virtual void OnPlayerPing()
@@ -134,9 +123,9 @@ namespace Hikaria.ItemMarker.Handlers
                 AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
-        public virtual void SetTerminalItemKey(string key)
+        internal void OnTerminalItemKeyUpdate(string key)
         {
-            if (m_marker != null)
+            if (m_markerTitleUseTerminalItemKey)
                 m_marker.SetTitle(key);
         }
 
@@ -164,7 +153,7 @@ namespace Hikaria.ItemMarker.Handlers
             }
         }
 
-        public virtual void Update()
+        protected virtual void Update()
         {
             if (m_marker == null)
                 return;
@@ -173,6 +162,12 @@ namespace Hikaria.ItemMarker.Handlers
                 return;
 
             m_updateTimer = Clock.Time + 0.2f;
+
+            if (ItemMarkerManager.DevMode)
+            {
+                OnDevUpdate();
+                return;
+            }
 
             if (m_markerForceVisibleTimer >= Clock.Time)
             {
@@ -193,7 +188,7 @@ namespace Hikaria.ItemMarker.Handlers
                 OnWorldUpdate();
         }
 
-        public virtual void OnWorldUpdate()
+        protected virtual void OnWorldUpdate()
         {
             if (Vector3.Distance(m_marker.TrackingTrans.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
                 AttemptInteract(eNavMarkerInteractionType.Show);
@@ -201,15 +196,18 @@ namespace Hikaria.ItemMarker.Handlers
                 AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
-        public virtual void OnDestroy()
+        protected virtual void OnDestroy()
         {
             if (m_marker != null)
                 GuiManager.NavMarkerLayer.RemoveMarker(m_marker);
             GameEventAPI.UnregisterListener(this);
             ItemMarkerManager.UnregisterItemMarkerAutoUpdate(this);
+            if (m_terminalItem != null)
+                ItemMarkerManager.UnregisterTerminalItemMarker(m_terminalItem.GetInstanceID(), this);
+            ItemMarkerManager.UnregisterItemMarker(this);
         }
 
-        public virtual void FixedUpdate()
+        protected virtual void FixedUpdate()
         {
             UpdateMarkerAlpha();
         }
@@ -218,6 +216,12 @@ namespace Hikaria.ItemMarker.Handlers
         {
             if (m_marker == null)
                 return;
+
+            if (ItemMarkerManager.DevMode)
+            {
+                OnDevUpdate();
+                return;
+            }
 
             if (m_markerForceVisibleTimer >= Clock.Time)
             {
@@ -257,7 +261,14 @@ namespace Hikaria.ItemMarker.Handlers
             }
         }
 
-        public virtual void OnManualUpdate() { }
+        protected virtual void OnManualUpdate() { }
+
+        internal void DoDevModeUpdate()
+        {
+            OnDevUpdate();
+        }
+
+        protected virtual void OnDevUpdate() { }
 
         protected IEnumerator HideDelay(float delay)
         {
@@ -271,7 +282,8 @@ namespace Hikaria.ItemMarker.Handlers
 
             while (m_marker)
             {
-                UpdateMarkerAlpha();
+                if (!ItemMarkerManager.DevMode)
+                    UpdateMarkerAlpha();
                 yield return yielder;
             }
         }
@@ -360,6 +372,9 @@ namespace Hikaria.ItemMarker.Handlers
         public virtual bool AllowDiscoverScan => !m_isDiscovered;
         public virtual AIG_CourseNode CourseNode => m_terminalItem.SpawnNode;
 
+        public bool IsVisible => m_marker.IsVisible;
+        public bool IsVisibleAndInFocus => m_marker.IsVisible && m_marker.m_currentState == NavMarkerState.InFocus;
+
         internal ItemMarkerVisibleUpdateModeType VisibleUpdateMode => m_markerVisibleUpdateMode;
 
         protected bool m_markerAlwaysShowTitle = false;
@@ -375,21 +390,21 @@ namespace Hikaria.ItemMarker.Handlers
         protected eNavMarkerStyle m_markerStyle = eNavMarkerStyle.LocationBeacon;
         protected float m_markerIconScale = 0.4f;
         protected int m_markerTitleFontSizeMax = 50;
+        protected bool m_markerTitleUseTerminalItemKey = false;
 
         protected LG_GenericTerminalItem m_terminalItem;
-        protected GameObject m_trackingObj;
 
         protected NavMarker m_marker;
         protected float m_updateTimer = 0f;
         protected float m_markerForceVisibleTimer = 0f;
 
-        private struct pBasicState
+        protected struct pBasicState
         {
             public bool IsDiscovered;
             public bool IsVisible;
         }
 
-        private readonly Dictionary<eBufferType, pBasicState> m_basicBuffers = new();
+        protected readonly Dictionary<eBufferType, pBasicState> m_basicBuffers = new();
 
         private PlayerAgent m_localPlayer;
         private bool m_isDiscovered;
@@ -402,5 +417,6 @@ public enum ItemMarkerVisibleUpdateModeType
     CourseNode,
     Zone,
     Dimension,
-    Manual
+    Manual,
+    Dev
 }
