@@ -115,7 +115,7 @@ namespace Hikaria.ItemMarker.Features
                 bool flag = false;
                 if (newState.style != eNavMarkerStyle.PlayerPingResourceLocker && newState.style != eNavMarkerStyle.PlayerPingResourceBox)
                 {
-                    var colliders = Physics.OverlapSphere(newState.worldPos, 0.001f, LayerManager.MASK_PLAYER_INTERACT_SPHERE);
+                    var colliders = Physics.OverlapSphere(newState.worldPos, 0.001f, LayerManager.MASK_PING_TARGET);
                     foreach (var collider in colliders)
                     {
                         var marker = collider.GetComponent<ItemMarkerTag>();

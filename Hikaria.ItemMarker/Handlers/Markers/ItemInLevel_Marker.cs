@@ -192,51 +192,53 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             if (LocalPlayerAgent == null || LocalPlayerAgent.CourseNode == null || CourseNode == null)
                 return;
 
-            if (m_itemSlot == InventorySlot.InLevelCarry)
+            switch (m_itemSlot)
             {
-                m_navMarkerPlacer?.m_marker?.SetVisible(false);
-
-                if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                    m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
-                else
-                    m_marker.SetTitle(m_markerTitle);
-
-                if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
-                {
+                case InventorySlot.InLevelCarry:
+                    m_navMarkerPlacer?.m_marker?.SetVisible(false);
+                    if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                        m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
+                    else
+                        m_marker.SetTitle(m_markerTitle);
+                    if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
+                    {
+                        AttemptInteract(eNavMarkerInteractionType.Hide);
+                        return;
+                    }
+                    if (!m_item.Cast<CarryItemPickup_Core>().IsInteractable)
+                    {
+                        AttemptInteract(eNavMarkerInteractionType.Hide);
+                        return;
+                    }
+                    AttemptInteract(eNavMarkerInteractionType.Show);
+                    return;
+                case InventorySlot.ResourcePack:
+                case InventorySlot.Consumable:
+                    if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
+                    {
+                        AttemptInteract(eNavMarkerInteractionType.Show);
+                        if (m_itemShowUses)
+                            m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                        else
+                            m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
+                        return;
+                    }
+                    if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
+                    {
+                        AttemptInteract(eNavMarkerInteractionType.Show);
+                        if (m_itemShowUses)
+                            m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                        else
+                            m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
+                        return;
+                    }
                     AttemptInteract(eNavMarkerInteractionType.Hide);
                     return;
-                }
-
-                if (!m_item.Cast<CarryItemPickup_Core>().IsInteractable)
-                {
-                    AttemptInteract(eNavMarkerInteractionType.Hide);
-                    return;
-                }
-
-                AttemptInteract(eNavMarkerInteractionType.Show);
-                return;
-            }
-
-            if (m_itemSlot == InventorySlot.ResourcePack || m_itemSlot == InventorySlot.Consumable)
-            {
-                if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
-                {
+                case InventorySlot.Pickup:
+                case InventorySlot.InPocket:
                     AttemptInteract(eNavMarkerInteractionType.Show);
-                    if (m_itemShowUses)
-                        m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
-                    else
-                        m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
+                    m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
                     return;
-                }
-                if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
-                {
-                    AttemptInteract(eNavMarkerInteractionType.Show);
-                    if (m_itemShowUses)
-                        m_marker.SetTitle($"$<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
-                    else
-                        m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
-                    return;
-                }
             }
 
             AttemptInteract(eNavMarkerInteractionType.Hide);
