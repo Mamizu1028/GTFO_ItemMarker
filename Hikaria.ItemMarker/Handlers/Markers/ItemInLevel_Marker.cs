@@ -236,6 +236,15 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     return;
                 case InventorySlot.Pickup:
                 case InventorySlot.InPocket:
+                    bool isKey = m_item.TryCast<KeyItemPickup_Core>() != null;
+                    if (!isKey)
+                    {
+                        if (CourseNode.m_zone.ID != LocalPlayerAgent.CourseNode.m_zone.ID)
+                        {
+                            AttemptInteract(eNavMarkerInteractionType.Hide);
+                            return;
+                        }
+                    }
                     AttemptInteract(eNavMarkerInteractionType.Show);
                     m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
                     return;
