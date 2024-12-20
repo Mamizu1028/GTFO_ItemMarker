@@ -14,6 +14,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_terminalItem = m_terminal.m_terminalItem.Cast<LG_GenericTerminalItem>();
             m_markerTitle = m_terminalItem.TerminalItemKey;
             m_markerStyle = eNavMarkerStyle.PlayerPingTerminal;
+            m_markerAlwaysShowTitle = true;
+            m_markerAlwaysShowDistance = true;
 
             foreach (var collider in comp.GetComponentsInChildren<Collider>(true))
             {
