@@ -21,7 +21,8 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker.SetColor(m_markerColor);
             m_marker.SetAlpha(m_markerAlpha);
             m_marker.SetVisible(false);
-            m_marker.m_title.fontSizeMax = m_markerTitleFontSizeMax;
+            m_marker.m_title.fontSizeMax = m_markerTitleFontSize;
+            m_marker.m_title.fontSizeMin = m_markerTitleFontSize;
             m_terminalItem ??= comp.GetComponentInChildren<LG_GenericTerminalItem>();
             if (!string.IsNullOrEmpty(m_markerTitle))
                 m_marker.SetTitle(m_markerTitle);
@@ -281,8 +282,7 @@ namespace Hikaria.ItemMarker.Handlers
 
             while (m_marker)
             {
-                if (!ItemMarkerManager.DevMode)
-                    UpdateMarkerAlpha();
+                UpdateMarkerAlpha();
                 yield return yielder;
             }
         }
@@ -388,7 +388,7 @@ namespace Hikaria.ItemMarker.Handlers
         protected string m_markerTitle = string.Empty;
         protected eNavMarkerStyle m_markerStyle = eNavMarkerStyle.LocationBeacon;
         protected float m_markerIconScale = 0.4f;
-        protected int m_markerTitleFontSizeMax = 50;
+        protected int m_markerTitleFontSize = 50;
         protected bool m_markerTitleUseTerminalItemKey = false;
 
         protected LG_GenericTerminalItem m_terminalItem;

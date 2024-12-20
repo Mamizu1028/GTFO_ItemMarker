@@ -191,15 +191,14 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
             if (LocalPlayerAgent == null || LocalPlayerAgent.CourseNode == null || CourseNode == null)
                 return;
-
             switch (m_itemSlot)
             {
                 case InventorySlot.InLevelCarry:
                     m_navMarkerPlacer?.m_marker?.SetVisible(false);
                     if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                        m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
+                        m_marker.SetTitle($"<color=red>未拾起</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_markerTitle}");
                     else
-                        m_marker.SetTitle(m_markerTitle);
+                        m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_markerTitle}");
                     if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
                     {
                         AttemptInteract(eNavMarkerInteractionType.Hide);
@@ -218,18 +217,18 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     {
                         AttemptInteract(eNavMarkerInteractionType.Show);
                         if (m_itemShowUses)
-                            m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                            m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
                         else
-                            m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
+                            m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
                         return;
                     }
                     if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
                     {
                         AttemptInteract(eNavMarkerInteractionType.Show);
                         if (m_itemShowUses)
-                            m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
+                            m_marker.SetTitle($"<color=red>不同区域</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
                         else
-                            m_marker.SetTitle($"<color=red>不同区域</color>\n{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
+                            m_marker.SetTitle($"<color=red>不同区域</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
                         return;
                     }
                     AttemptInteract(eNavMarkerInteractionType.Hide);
@@ -302,6 +301,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 }
                 else
                 {
+                    UpdateItemUsesLeft();
                     ForceUpdate();
                 }
             }
@@ -309,7 +309,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnManualUpdate()
         {
-            UpdateItemUsesLeft();
             if (m_itemSlot == InventorySlot.InLevelCarry)
             {
                 m_navMarkerPlacer?.m_marker?.SetVisible(false);
