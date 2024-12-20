@@ -24,6 +24,7 @@ namespace Hikaria.ItemMarker.Managers
                     {
                         foreach (var marker in _allItemMarkers)
                         {
+                            marker.DoEnterDevMode();
                             if (!marker.enabled)
                                 CoroutineManager.StartCoroutine(UpdateDevMode(marker).WrapToIl2Cpp());
                         }
@@ -32,7 +33,7 @@ namespace Hikaria.ItemMarker.Managers
                     {
                         foreach (var marker in _allItemMarkers)
                         {
-                            marker.ForceUpdate();
+                            marker.DoExitDevMode();
                         }
                     }
                 }

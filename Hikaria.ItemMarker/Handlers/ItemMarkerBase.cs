@@ -263,10 +263,15 @@ namespace Hikaria.ItemMarker.Handlers
 
         protected virtual void OnManualUpdate() { }
 
-        internal void DoDevModeUpdate()
-        {
-            OnDevUpdate();
-        }
+        internal void DoDevModeUpdate() { OnDevUpdate(); }
+
+        internal void DoEnterDevMode() { OnEnterDevMode(); }
+
+        internal void DoExitDevMode() { OnExitDevMode(); }
+
+        protected virtual void OnEnterDevMode() { }
+
+        protected virtual void OnExitDevMode() { ForceUpdate(); }
 
         protected virtual void OnDevUpdate() { }
 
