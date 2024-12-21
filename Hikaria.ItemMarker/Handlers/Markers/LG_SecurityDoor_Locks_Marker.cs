@@ -23,6 +23,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
             m_marker.SetVisualStates(NavMarkerOption.WaypointTitle, NavMarkerOption.WaypointTitle, NavMarkerOption.Empty);
             m_marker.m_titleSubObj.transform.localScale = Vector3.one * 1.75f;
+            m_marker.m_title.fontSizeMax = 50;
+            m_marker.m_title.fontSizeMin = 15;
         }
 
         private void OnApproached()
