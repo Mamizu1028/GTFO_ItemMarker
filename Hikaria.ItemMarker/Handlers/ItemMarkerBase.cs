@@ -39,10 +39,13 @@ namespace Hikaria.ItemMarker.Handlers
             {
                 m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Distance;
             }
-            foreach (var collider in comp.GetComponentsInChildren<Collider>(true))
+            if (m_overridePlayerPing)
             {
-                if (collider.GetComponent<ItemMarkerTag>() == null)
-                    collider.gameObject.AddComponent<ItemMarkerTag>().Setup(this);
+                foreach (var collider in comp.GetComponentsInChildren<Collider>(true))
+                {
+                    if (collider.GetComponent<ItemMarkerTag>() == null)
+                        collider.gameObject.AddComponent<ItemMarkerTag>().Setup(this);
+                }
             }
 
             enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World;
@@ -395,6 +398,7 @@ namespace Hikaria.ItemMarker.Handlers
         protected float m_markerIconScale = 0.4f;
         protected int m_markerTitleFontSize = 50;
         protected bool m_markerTitleUseTerminalItemKey = false;
+        protected bool m_overridePlayerPing = true;
 
         protected LG_GenericTerminalItem m_terminalItem;
 

@@ -18,6 +18,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_markerIconScale = 0.275f;
             m_locks.add_OnApproached((Action)OnApproached);
             m_door.m_sync.add_OnDoorStateChange((Action<pDoorState, bool>)OnDoorStateChange);
+            m_overridePlayerPing = false;
 
             base.SetupNavMarker(comp);
 
