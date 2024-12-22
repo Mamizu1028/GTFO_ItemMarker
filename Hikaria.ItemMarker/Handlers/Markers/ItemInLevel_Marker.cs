@@ -191,18 +191,18 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                         m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
                     else
                         m_marker.SetTitle(m_markerTitle);
-                    return;
+                    break;
                 case InventorySlot.ResourcePack:
                 case InventorySlot.Consumable:
                     if (m_itemShowUses)
                         m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
                     else
                         m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
-                    return;
+                    break;
                 case InventorySlot.Pickup:
                 case InventorySlot.InPocket:
                     m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
-                    return;
+                    break;
             }
 
             base.OnExitDevMode();
@@ -341,7 +341,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 m_navMarkerPlacer?.m_marker?.SetVisible(false);
 
                 if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                    m_marker.SetTitle($"{m_markerTitle}\n<color=red>未拾起</color>");
+                    m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
                 else
                     m_marker.SetTitle(m_markerTitle);
 
