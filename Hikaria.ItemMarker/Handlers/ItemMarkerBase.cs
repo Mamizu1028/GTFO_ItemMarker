@@ -18,6 +18,7 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker ??= GuiManager.NavMarkerLayer.PrepareGenericMarker(comp.gameObject);
             m_marker.SetStyle(m_markerStyle);
             m_marker.SetIconScale(m_markerIconScale);
+            m_marker.SetPinEnabled(m_markerShowPin);
             m_marker.SetColor(m_markerColor);
             m_marker.SetAlpha(m_markerAlpha);
             m_marker.SetVisible(false);
@@ -220,6 +221,8 @@ namespace Hikaria.ItemMarker.Handlers
             if (m_marker == null)
                 return;
 
+            UpdateMarkerTitle();
+
             if (ItemMarkerManager.DevMode)
             {
                 OnDevUpdate();
@@ -272,7 +275,7 @@ namespace Hikaria.ItemMarker.Handlers
 
         internal void DoExitDevMode() { OnExitDevMode(); }
 
-        protected virtual void OnEnterDevMode() { }
+        protected virtual void OnEnterDevMode() { ForceUpdate(); }
 
         protected virtual void OnExitDevMode() { ForceUpdate(); }
 
@@ -295,6 +298,10 @@ namespace Hikaria.ItemMarker.Handlers
             }
         }
 
+        public void UpdateMarkerTitle()
+        {
+            m_marker.SetTitle(MarkerTitle);
+        }
 
         public void UpdateMarkerAlpha()
         {
@@ -384,6 +391,8 @@ namespace Hikaria.ItemMarker.Handlers
 
         internal ItemMarkerVisibleUpdateModeType VisibleUpdateMode => m_markerVisibleUpdateMode;
 
+        protected virtual string MarkerTitle => m_markerTitle;
+
         protected bool m_markerAlwaysShowTitle = false;
         protected bool m_markerAlwaysShowDistance = false;
         protected float m_markerPingFadeOutTime = 12f;
@@ -399,6 +408,7 @@ namespace Hikaria.ItemMarker.Handlers
         protected int m_markerTitleFontSize = 50;
         protected bool m_markerTitleUseTerminalItemKey = false;
         protected bool m_overridePlayerPing = true;
+        protected bool m_markerShowPin = false;
 
         protected LG_GenericTerminalItem m_terminalItem;
 

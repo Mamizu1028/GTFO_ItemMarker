@@ -26,6 +26,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_navMarkerPlacer = m_item.GetComponent<PlaceNavMarkerOnGO>();
             m_itemSlot = itemDataBlock.inventorySlot;
             m_itemShowUses = !itemDataBlock.GUIShowAmmoInfinite && itemDataBlock.GUIShowAmmoTotalRel;
+            m_markerShowPin = true;
             switch (PlayerAmmoStorage.GetAmmoTypeFromSlot(itemDataBlock.inventorySlot))
             {
                 case AmmoType.CurrentConsumable:
@@ -85,7 +86,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
 
             if (m_itemSlot == InventorySlot.InLevelCarry)
-                m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
+                UpdateMarkerTitle();
         }
 
 
@@ -112,6 +113,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             }
             else if (status == ePickupItemStatus.PickedUp)
             {
+                if (!IsDiscovered)
+                    IsDiscovered = true;
                 IsPlacedInLevel = false;
             }
         }
@@ -138,6 +141,14 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 return;
 
             base.OnTerminalPing();
+        }
+
+        protected override void OnWorldUpdate()
+        {
+            if (!IsPlacedInLevel)
+                return;
+
+            base.OnWorldUpdate();
         }
 
         public override void OnPlayerCourseNodeChanged(AIG_CourseNode newNode)
@@ -177,8 +188,20 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             if (m_itemShowUses)
             {
                 m_itemUsesLeft = Mathf.FloorToInt(m_item.GetCustomData().ammo / m_itemCostOfBullet);
-                m_marker.SetTitle($"{m_markerTitle} ×{m_itemUsesLeft}");
+                UpdateMarkerTitle();
             }
+        }
+
+        protected override void OnEnterDevMode()
+        {
+            switch (m_itemSlot)
+            {
+                case InventorySlot.InLevelCarry:
+                    m_navMarkerPlacer?.m_marker?.SetVisible(false);
+                    break;
+            }
+
+            base.OnEnterDevMode();
         }
 
         protected override void OnExitDevMode()
@@ -187,21 +210,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             {
                 case InventorySlot.InLevelCarry:
                     m_navMarkerPlacer?.m_marker?.SetVisible(false);
-                    if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                        m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
-                    else
-                        m_marker.SetTitle(m_markerTitle);
-                    break;
-                case InventorySlot.ResourcePack:
-                case InventorySlot.Consumable:
-                    if (m_itemShowUses)
-                        m_marker.SetTitle($"{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
-                    else
-                        m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
-                    break;
-                case InventorySlot.Pickup:
-                case InventorySlot.InPocket:
-                    m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
                     break;
             }
 
@@ -222,10 +230,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             {
                 case InventorySlot.InLevelCarry:
                     m_navMarkerPlacer?.m_marker?.SetVisible(false);
-                    if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                        m_marker.SetTitle($"<color=red>未拾起</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_markerTitle}");
-                    else
-                        m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_markerTitle}");
                     if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
                     {
                         AttemptInteract(eNavMarkerInteractionType.Hide);
@@ -243,19 +247,11 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
                     {
                         AttemptInteract(eNavMarkerInteractionType.Show);
-                        if (m_itemShowUses)
-                            m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
-                        else
-                            m_marker.SetTitle($"{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
                         return;
                     }
                     if (Vector3.Distance(m_item.transform.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
                     {
                         AttemptInteract(eNavMarkerInteractionType.Show);
-                        if (m_itemShowUses)
-                            m_marker.SetTitle($"<color=red>不同区域</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}");
-                        else
-                            m_marker.SetTitle($"<color=red>不同区域</color>\n{(IsDiscovered ? string.Empty : "<color=red>未发现</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}");
                         return;
                     }
                     AttemptInteract(eNavMarkerInteractionType.Hide);
@@ -272,7 +268,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                         }
                     }
                     AttemptInteract(eNavMarkerInteractionType.Show);
-                    m_marker.SetTitle(m_terminalItem?.TerminalItemKey ?? m_item.PublicName);
                     return;
             }
 
@@ -340,10 +335,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             {
                 m_navMarkerPlacer?.m_marker?.SetVisible(false);
 
-                if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
-                    m_marker.SetTitle($"<color=red>未拾起</color>\n{m_markerTitle}");
-                else
-                    m_marker.SetTitle(m_markerTitle);
+                UpdateMarkerTitle();
 
                 if (m_item.GetCustomData().byteState > 0) // HSU, CELL...
                 {
@@ -365,6 +357,62 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             }
 
             AttemptInteract(eNavMarkerInteractionType.Show);
+        }
+
+        protected override string MarkerTitle
+        {
+            get
+            {
+                if (ItemMarkerManager.DevMode)
+                {
+                    switch (m_itemSlot)
+                    {
+                        case InventorySlot.InLevelCarry:
+                            if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                                return $"<color=red>{Features.ItemMarker.Localization.Get(1)}</color>\n{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_markerTitle}";
+                            else
+                                return $"{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_markerTitle}";
+                        case InventorySlot.ResourcePack:
+                        case InventorySlot.Consumable:
+                            if (CourseNode != null && CourseNode.m_zone.ID != LocalPlayerAgent.CourseNode.m_zone.ID)
+                            {
+                                if (m_itemShowUses)
+                                    return $"<color=red>{Features.ItemMarker.Localization.Get(3)}</color>\n{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}";
+                                else
+                                    return $"<color=red>{Features.ItemMarker.Localization.Get(3)}</color>\n{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}";
+                            }
+                            if (m_itemShowUses)
+                                return $"{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}";
+                            else
+                                return $"{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName}";
+                        case InventorySlot.Pickup:
+                        case InventorySlot.InPocket:
+                            return m_terminalItem?.TerminalItemKey ?? m_item.PublicName;
+                    }
+
+                    return m_markerTitle;
+                }
+
+                switch (m_itemSlot)
+                {
+                    case InventorySlot.InLevelCarry:
+                        if (!m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+                            return $"<color=red>{Features.ItemMarker.Localization.Get(1)}</color>\n{m_markerTitle}";
+                        else
+                            return m_markerTitle;
+                    case InventorySlot.ResourcePack:
+                    case InventorySlot.Consumable:
+                        if (m_itemShowUses)
+                            return $"{m_markerTitle} ×{m_itemUsesLeft}";
+                        else
+                            return m_markerTitle;
+                    case InventorySlot.Pickup:
+                    case InventorySlot.InPocket:
+                        return m_markerTitle;
+                }
+
+                return m_markerTitle;
+            }
         }
 
         public override AIG_CourseNode CourseNode => m_item.CourseNode;

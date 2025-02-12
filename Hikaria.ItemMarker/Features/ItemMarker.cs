@@ -6,6 +6,7 @@ using LevelGeneration;
 using Player;
 using TheArchive.Core.Attributes;
 using TheArchive.Core.FeaturesAPI;
+using TheArchive.Core.Localization;
 using UnityEngine;
 
 namespace Hikaria.ItemMarker.Features
@@ -17,6 +18,8 @@ namespace Hikaria.ItemMarker.Features
     public class ItemMarker : Feature
     {
         public override string Name => "物品标记";
+
+        public static new ILocalizationService Localization { get; set; }
 
         public override void Init()
         {

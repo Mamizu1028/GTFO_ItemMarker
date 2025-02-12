@@ -19,6 +19,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_locks.add_OnApproached((Action)OnApproached);
             m_door.m_sync.add_OnDoorStateChange((Action<pDoorState, bool>)OnDoorStateChange);
             m_overridePlayerPing = false;
+            m_markerShowPin = true;
 
             base.SetupNavMarker(comp);
 

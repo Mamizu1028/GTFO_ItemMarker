@@ -15,6 +15,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_markerStyle = eNavMarkerStyle.PlayerPingBulkheadDC;
             m_terminalItem = m_bulkDc.m_terminalItem.Cast<LG_GenericTerminalItem>();
             m_markerTitle = m_terminalItem.TerminalItemKey;
+            m_markerShowPin = true;
 
             base.SetupNavMarker(comp);
         }

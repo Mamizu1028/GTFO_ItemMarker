@@ -16,6 +16,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_markerStyle = eNavMarkerStyle.PlayerPingTerminal;
             m_markerAlwaysShowTitle = true;
             m_markerAlwaysShowDistance = true;
+            m_markerShowPin = true;
 
             foreach (var collider in comp.GetComponentsInChildren<Collider>(true))
             {

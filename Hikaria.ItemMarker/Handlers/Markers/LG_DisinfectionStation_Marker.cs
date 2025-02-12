@@ -14,6 +14,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_markerStyle = eNavMarkerStyle.PlayerPingDisinfection;
             m_terminalItem = m_station.m_terminalItem.Cast<LG_GenericTerminalItem>();
             m_markerTitle = m_terminalItem.TerminalItemKey;
+            m_markerShowPin = true;
 
             base.SetupNavMarker(comp);
         }
