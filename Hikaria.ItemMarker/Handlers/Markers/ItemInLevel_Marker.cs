@@ -224,8 +224,11 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 return;
             }
 
+            UpdateMarkerTitle();
+
             if (LocalPlayerAgent == null || LocalPlayerAgent.CourseNode == null || CourseNode == null)
                 return;
+
             switch (m_itemSlot)
             {
                 case InventorySlot.InLevelCarry:
@@ -374,7 +377,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                                 return $"{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_markerTitle}";
                         case InventorySlot.ResourcePack:
                         case InventorySlot.Consumable:
-                            if (CourseNode != null && CourseNode.m_zone.ID != LocalPlayerAgent.CourseNode.m_zone.ID)
+                            if (CourseNode != null && LocalPlayerAgent != null && LocalPlayerAgent.CourseNode != null && CourseNode.m_zone.ID != LocalPlayerAgent.CourseNode.m_zone.ID)
                             {
                                 if (m_itemShowUses)
                                     return $"<color=red>{Features.ItemMarker.Localization.Get(3)}</color>\n{(IsDiscovered ? string.Empty : $"<color=red>{Features.ItemMarker.Localization.Get(2)}</color>\n")}{m_terminalItem?.TerminalItemKey ?? m_item.PublicName} ×{m_itemUsesLeft}";

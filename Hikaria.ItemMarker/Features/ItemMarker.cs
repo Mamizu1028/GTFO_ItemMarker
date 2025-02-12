@@ -5,6 +5,7 @@ using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using TheArchive.Core.Attributes;
+using TheArchive.Core.Attributes.Feature.Settings;
 using TheArchive.Core.FeaturesAPI;
 using TheArchive.Core.Localization;
 using UnityEngine;
@@ -20,6 +21,20 @@ namespace Hikaria.ItemMarker.Features
         public override string Name => "物品标记";
 
         public static new ILocalizationService Localization { get; set; }
+
+        [FeatureConfig]
+        public static ItemMarkerSettings Settings { get; set; }
+
+        public class ItemMarkerSettings
+        {
+            [FSDisplayName("开发者模式")]
+            [FSHide]
+            public bool DevMode
+            {
+                get => ItemMarkerManager.DevMode;
+                set => ItemMarkerManager.DevMode = value;
+            }
+        }
 
         public override void Init()
         {
