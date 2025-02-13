@@ -411,7 +411,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                             return m_markerTitle;
                     case InventorySlot.Pickup:
                     case InventorySlot.InPocket:
-                        return m_markerTitle;
+                        return m_terminalItem?.TerminalItemKey ?? m_item.PublicName;
                 }
 
                 return m_markerTitle;
