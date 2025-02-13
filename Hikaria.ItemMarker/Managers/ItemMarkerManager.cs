@@ -63,6 +63,7 @@ namespace Hikaria.ItemMarker.Managers
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_HSUActivator_Marker>();
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_BulkheadDoorController_Marker>();
             LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_SecurityDoor_Locks_Marker>();
+            LoaderWrapper.ClassInjector.RegisterTypeInIl2Cpp<LG_DisinfectionStation_Marker>();
         }
 
         internal static void SearchGameObject()

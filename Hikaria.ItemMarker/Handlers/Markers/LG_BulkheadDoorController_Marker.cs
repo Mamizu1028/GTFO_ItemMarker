@@ -10,7 +10,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_bulkDc = comp.Cast<LG_BulkheadDoorController_Core>();
             m_bulkDc.add_OnStateChangeCallback((Action<eBulkheadDCStatus, eBulkheadDCStatus>)OnStateChangeCallback);
             m_marker = GuiManager.NavMarkerLayer.PrepareGenericMarker(comp.gameObject);
-            m_markerColor = new Color(0.467f, 0.098f, 1f);
+            m_markerColor = new Color(0.573f, 0.663f, 0.718f);
             m_markerVisibleUpdateMode = ItemMarkerVisibleUpdateModeType.Manual;
             m_markerStyle = eNavMarkerStyle.PlayerPingBulkheadDC;
             m_terminalItem = m_bulkDc.m_terminalItem.Cast<LG_GenericTerminalItem>();
@@ -42,6 +42,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnDevUpdate()
         {
+            if (m_markerForceVisibleTimer >= Clock.Time)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+
             OnManualUpdate();
         }
 

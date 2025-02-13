@@ -9,7 +9,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         {
             m_station = comp.Cast<LG_DisinfectionStation>();
             m_marker = GuiManager.NavMarkerLayer.PrepareGenericMarker(comp.gameObject);
-            m_markerColor = new Color(0.467f, 0.098f, 1f);
+            m_markerColor = new Color(0.49f, 0.77f, 0.78f);
             m_markerVisibleUpdateMode = ItemMarkerVisibleUpdateModeType.Manual;
             m_markerStyle = eNavMarkerStyle.PlayerPingDisinfection;
             m_terminalItem = m_station.m_terminalItem.Cast<LG_GenericTerminalItem>();
@@ -29,6 +29,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnDevUpdate()
         {
+            if (m_markerForceVisibleTimer >= Clock.Time)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+
             OnManualUpdate();
         }
 

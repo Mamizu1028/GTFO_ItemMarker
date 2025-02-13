@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using Gear;
 using Hikaria.ItemMarker.Handlers;
 using Hikaria.ItemMarker.Handlers.Markers;
 using Hikaria.ItemMarker.Managers;
@@ -139,6 +140,8 @@ namespace Hikaria.ItemMarker.Features
                         var marker = collider.GetComponent<ItemMarkerTag>();
                         if (marker == null)
                             continue;
+                        if (marker.ItemMarker.Style != newState.style)
+                            continue;
                         marker.ItemMarker.OnPlayerPing();
                         flag = true;
                     }
@@ -181,7 +184,7 @@ namespace Hikaria.ItemMarker.Features
                     return;
                 }
                 var terminalItem = itemInLevel.GetComponent<iTerminalItem>();
-                if (terminalItem != null)
+                if (terminalItem?.SpawnNode != null)
                 {
                     itemInLevel.CourseNode = terminalItem.SpawnNode;
                     return;
@@ -210,14 +213,36 @@ namespace Hikaria.ItemMarker.Features
             }
         }
 
-        [ArchivePatch(typeof(CarryItemPickup_Core), nameof(CarryItemPickup_Core.PlacedInLevelCustomDataUpdate))]
-        private class CarryItemPickup_Core__PlacedInLevelCustomDataUpdate__Patch
+        [ArchivePatch(typeof(CarryItemPickup_Core), nameof(CarryItemPickup_Core.OnCustomDataUpdated))]
+        private class CarryItemPickup_Core__OnCustomDataUpdated__Patch
         {
-            private static void Postfix(CarryItemPickup_Core __instance, pItemData_Custom custom)
+            private static void Postfix(CarryItemPickup_Core __instance, pItemData_Custom customDataCopy)
             {
                 if (!ItemInLevel_Marker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
                     return;
-                marker.OnItemCustomDataUpdate(custom);
+                marker.OnItemCustomDataUpdate(customDataCopy);
+            }
+        }
+
+        [ArchivePatch(typeof(ResourcePackPickup), nameof(ResourcePackPickup.OnCustomDataUpdated))]
+        private class ResourcePackPickup__OnCustomDataUpdated__Patch
+        {
+            private static void Postfix(ResourcePackPickup __instance, pItemData_Custom customDataCopy)
+            {
+                if (!ItemInLevel_Marker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
+                    return;
+                marker.OnItemCustomDataUpdate(customDataCopy);
+            }
+        }
+
+        [ArchivePatch(typeof(ConsumablePickup_Core), nameof(ConsumablePickup_Core.OnCustomDataUpdated))]
+        private class ConsumablePickup_Core__OnCustomDataUpdated__Patch
+        {
+            private static void Postfix(ConsumablePickup_Core __instance, pItemData_Custom customDataCopy)
+            {
+                if (!ItemInLevel_Marker.ItemInLevelMarkerLookup.TryGetValue(__instance.GetInstanceID(), out var marker))
+                    return;
+                marker.OnItemCustomDataUpdate(customDataCopy);
             }
         }
 
@@ -330,6 +355,16 @@ namespace Hikaria.ItemMarker.Features
             {
                 if (__instance.GetComponent<LG_SecurityDoor_Locks_Marker>() == null)
                     __instance.gameObject.AddComponent<LG_SecurityDoor_Locks_Marker>().SetupNavMarker(__instance);
+            }
+        }
+
+        [ArchivePatch(typeof(LG_DisinfectionStation), nameof(LG_DisinfectionStation.Setup))]
+        private class LG_DisinfectionStation__Setup__Patch
+        {
+            private static void Postfix(LG_DisinfectionStation __instance)
+            {
+                if (__instance.GetComponent<LG_DisinfectionStation_Marker>() == null)
+                    __instance.gameObject.AddComponent<LG_DisinfectionStation_Marker>().SetupNavMarker(__instance);
             }
         }
     }

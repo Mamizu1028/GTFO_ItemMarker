@@ -86,7 +86,7 @@ namespace Hikaria.ItemMarker.Handlers
         {
             if (!IsDiscovered)
                 return;
-            if (newNode == null)
+            if (newNode == null || CourseNode == null)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
@@ -101,7 +101,7 @@ namespace Hikaria.ItemMarker.Handlers
         {
             if (!IsDiscovered)
                 return;
-            if (newZone == null)
+            if (newZone == null || CourseNode == null)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
@@ -116,7 +116,7 @@ namespace Hikaria.ItemMarker.Handlers
         {
             if (!IsDiscovered)
                 return;
-            if (newDim == null)
+            if (newDim == null || CourseNode == null)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
@@ -388,6 +388,8 @@ namespace Hikaria.ItemMarker.Handlers
 
         public bool IsVisible => m_marker.IsVisible;
         public bool IsVisibleAndInFocus => m_marker.IsVisible && m_marker.m_currentState == NavMarkerState.InFocus;
+
+        public eNavMarkerStyle Style => m_markerStyle;
 
         internal ItemMarkerVisibleUpdateModeType VisibleUpdateMode => m_markerVisibleUpdateMode;
 

@@ -29,6 +29,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         protected override void OnDevUpdate()
         {
+            if (m_markerForceVisibleTimer >= Clock.Time)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+
             var zone = LocalPlayerAgent?.CourseNode?.m_zone;
             if (zone == null)
             {

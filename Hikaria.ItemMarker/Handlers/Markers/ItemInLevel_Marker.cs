@@ -121,6 +121,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         public void OnItemCustomDataUpdate(pItemData_Custom custom)
         {
+            UpdateItemUsesLeft();
+
             if (m_itemSlot != InventorySlot.InLevelCarry)
                 return;
             if (custom.byteState > 0) // HSU, CELL...
