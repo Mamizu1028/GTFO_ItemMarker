@@ -223,15 +223,15 @@ namespace Hikaria.ItemMarker.Handlers
 
             UpdateMarkerTitle();
 
-            if (ItemMarkerManager.DevMode)
-            {
-                OnDevUpdate();
-                return;
-            }
-
             if (m_markerForceVisibleTimer >= Clock.Time)
             {
                 AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+
+            if (ItemMarkerManager.DevMode)
+            {
+                OnDevUpdate();
                 return;
             }
 

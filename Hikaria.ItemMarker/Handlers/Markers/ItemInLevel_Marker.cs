@@ -41,7 +41,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     m_itemShowUses = false;
                     break;
             }
-            m_allowDiscoverScan = m_item.container == null && m_itemSlot != InventorySlot.InPocket && m_itemSlot != InventorySlot.Pickup;
             m_marker = GuiManager.NavMarkerLayer.PrepareGenericMarker(m_item.gameObject);
             m_markerStyle = GetComponentInChildren<iPlayerPingTarget>()?.PingTargetStyle ?? eNavMarkerStyle.LocationBeacon;
             m_markerTitle = itemDataBlock.publicName;
@@ -223,6 +222,12 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             if (!IsPlacedInLevel)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
+            }
+
+            if (m_markerForceVisibleTimer >= Clock.Time)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
                 return;
             }
 
@@ -422,7 +427,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         public override AIG_CourseNode CourseNode => m_item.CourseNode;
 
-        public override bool AllowDiscoverScan => base.AllowDiscoverScan && m_allowDiscoverScan;
+        public override bool AllowDiscoverScan => base.AllowDiscoverScan && m_item.container == null;
 
         private ItemInLevel m_item;
         private float m_itemCostOfBullet = 1f;
@@ -431,7 +436,6 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         private InventorySlot m_itemSlot;
 
         private PlaceNavMarkerOnGO m_navMarkerPlacer;
-        private bool m_allowDiscoverScan;
         private bool m_isPlacedInLevel = true;
 
         private readonly Dictionary<eBufferType, pItemInLevelMarkerState> m_buffers = new();

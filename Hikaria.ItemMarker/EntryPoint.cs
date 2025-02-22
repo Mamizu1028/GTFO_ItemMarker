@@ -6,6 +6,7 @@ using TheArchive.Core.Localization;
 namespace Hikaria.ItemMarker
 {
     [ArchiveDependency(Core.PluginInfo.GUID)]
+    [ArchiveDependency(DropItem.PluginInfo.GUID)]
     [ArchiveModule(PluginInfo.GUID, PluginInfo.NAME, PluginInfo.VERSION)]
     public class EntryPoint : IArchiveModule
     {

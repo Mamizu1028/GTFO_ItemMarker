@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using AK;
 using Gear;
 using Hikaria.ItemMarker.Handlers;
 using Hikaria.ItemMarker.Handlers.Markers;
@@ -6,7 +7,6 @@ using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using TheArchive.Core.Attributes;
-using TheArchive.Core.Attributes.Feature.Settings;
 using TheArchive.Core.FeaturesAPI;
 using TheArchive.Core.Localization;
 using UnityEngine;
@@ -22,20 +22,6 @@ namespace Hikaria.ItemMarker.Features
         public override string Name => "物品标记";
 
         public static new ILocalizationService Localization { get; set; }
-
-        [FeatureConfig]
-        public static ItemMarkerSettings Settings { get; set; }
-
-        public class ItemMarkerSettings
-        {
-            [FSDisplayName("开发者模式")]
-            [FSHide]
-            public bool DevMode
-            {
-                get => ItemMarkerManager.DevMode;
-                set => ItemMarkerManager.DevMode = value;
-            }
-        }
 
         public override void Init()
         {
@@ -147,7 +133,33 @@ namespace Hikaria.ItemMarker.Features
                     }
                 }
 
-                return !flag;
+                if (flag)
+                {
+                    __instance.transform.position = newState.worldPos;
+                    __instance.m_marker.SetStyle(newState.style);
+                    __instance.m_marker.SetVisible(false);
+                    __instance.LastVisibleTerminalItemId = newState.terminalItemId;
+                    __instance.m_sound.UpdatePosition(newState.worldPos);
+                    if (newState.style != eNavMarkerStyle.TerminalPing && PlayerManager.HasLocalPlayerAgent() && PlayerManager.GetLocalPlayerSlotIndex() != __instance.m_playerIndex)
+                    {
+                        if (newState.style == eNavMarkerStyle.LocationBeacon || newState.style == eNavMarkerStyle.PlayerPingLookat)
+                        {
+                            __instance.m_sound.Post(EVENTS.PING_RECEIVED_GENERIC, true);
+                        }
+                        else
+                        {
+                            __instance.m_sound.Post(EVENTS.PING_RECEIVED_SPECIFIC, true);
+                        }
+                    }
+                    var onSyncedStateChange = __instance.OnSyncedStateChange;
+                    if (onSyncedStateChange != null)
+                    {
+                        onSyncedStateChange.Invoke(__instance.m_playerIndex, newState);
+                    }
+                    return false;
+                }
+
+                return true;
             }
         }
 
@@ -184,11 +196,21 @@ namespace Hikaria.ItemMarker.Features
                     return;
                 }
                 var terminalItem = itemInLevel.GetComponent<iTerminalItem>();
-                if (terminalItem?.SpawnNode != null)
+                if (terminalItem != null)
                 {
-                    itemInLevel.CourseNode = terminalItem.SpawnNode;
-                    return;
+                    if (terminalItem.SpawnNode == null)
+                    {
+                        var area = terminalItem.Cast<LG_GenericTerminalItem>().GetComponentInParent<LG_Area>();
+                        if (area != null)
+                            terminalItem.SpawnNode = area.m_courseNode;
+                    }
+                    if (itemInLevel.CourseNode == null && terminalItem.SpawnNode != null)
+                    {
+                        itemInLevel.CourseNode = terminalItem.SpawnNode;
+                        return;
+                    }
                 }
+
                 var pickupItem = itemInLevel.transform.parent?.parent?.GetComponentInChildren<LG_PickupItem>();
                 if (pickupItem != null)
                 {
