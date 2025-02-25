@@ -92,7 +92,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         protected override void Update()
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.Update();
         }
@@ -131,7 +134,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         public override void OnPlayerPing()
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnPlayerPing();
         }
@@ -139,15 +145,44 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         public override void OnTerminalPing()
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnTerminalPing();
+        }
+
+        protected override void OnCustomUpdate()
+        {
+            if (!IsPlacedInLevel)
+                return;
+
+            if (CourseNode == null)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
+            }
+            if (CourseNode.m_zone.ID == LocalPlayerAgent.CourseNode.m_zone.ID)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+            else if (Vector3.Distance(m_marker.TrackingTrans.position, LocalPlayerAgent.transform.position) <= m_markerVisibleWorldDistance)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Show);
+                return;
+            }
+            AttemptInteract(eNavMarkerInteractionType.Hide);
         }
 
         protected override void OnWorldUpdate()
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnWorldUpdate();
         }
@@ -155,7 +190,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         public override void OnPlayerCourseNodeChanged(AIG_CourseNode newNode)
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnPlayerCourseNodeChanged(newNode);
         }
@@ -163,7 +201,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         public override void OnPlayerZoneChanged(LG_Zone newZone)
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnPlayerZoneChanged(newZone);
         }
@@ -171,7 +212,10 @@ namespace Hikaria.ItemMarker.Handlers.Markers
         public override void OnPlayerDimensionChanged(Dimension newDim)
         {
             if (!IsPlacedInLevel)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
             base.OnPlayerDimensionChanged(newDim);
         }
@@ -301,10 +345,16 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             if (!m_buffers.TryGetValue(bufferType, out var state))
             {
                 IsPlacedInLevel = m_item.internalSync.GetCurrentState().status == ePickupItemStatus.PlacedInLevel;
-                return;
+            }
+            else
+            {
+                IsPlacedInLevel = state.IsPlacedInLevel;
             }
 
-            IsPlacedInLevel = state.IsPlacedInLevel;
+            if (!IsDiscovered && m_item.internalSync.GetCurrentState().placement.hasBeenPickedUp)
+            {
+                IsDiscovered = true;
+            }
         }
 
         protected override void ResetBuffer()
@@ -456,7 +506,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public bool UsePublicName { get; set; } = false;
             public bool UseTerminalItemKey { get; set; } = false;
             public SColor Color { get; set; } = UnityEngine.Color.white;
-            public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.World;
+            public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.Custom;
             public float VisibleWorldDistance { get; set; } = 30f;
             public int VisibleCourseNodeDistance { get; set; } = 1;
             public float Alpha { get; set; } = 0.9f;
@@ -507,7 +557,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             {
                 case InventorySlot.ResourcePack:
                 case InventorySlot.Consumable:
-                    return ItemMarkerVisibleUpdateModeType.World;
+                    return ItemMarkerVisibleUpdateModeType.Custom;
                 case InventorySlot.InPocket:
                 case InventorySlot.Pickup:
                     return ItemMarkerVisibleUpdateModeType.Zone;

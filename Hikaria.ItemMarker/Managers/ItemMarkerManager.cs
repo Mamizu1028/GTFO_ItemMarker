@@ -93,6 +93,9 @@ namespace Hikaria.ItemMarker.Managers
         {
             _allItemMarkers.Add(marker);
 
+            if (DevMode)
+                marker.DoEnterDevMode();
+
             if (!marker.enabled)
                 CoroutineManager.StartCoroutine(UpdateDevMode(marker).WrapToIl2Cpp());
         }
@@ -220,7 +223,7 @@ namespace Hikaria.ItemMarker.Managers
             { ItemMarkerVisibleUpdateModeType.Zone, new() },
             { ItemMarkerVisibleUpdateModeType.Dimension, new() },
             { ItemMarkerVisibleUpdateModeType.Manual, new() },
-            { ItemMarkerVisibleUpdateModeType.Dev, new() },
+            { ItemMarkerVisibleUpdateModeType.Custom, new() },
         };
     }
 }

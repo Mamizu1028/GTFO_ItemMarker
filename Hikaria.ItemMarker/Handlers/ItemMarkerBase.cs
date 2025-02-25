@@ -31,7 +31,7 @@ namespace Hikaria.ItemMarker.Handlers
                 m_marker.SetTitle(m_terminalItem.TerminalItemKey);
             else
                 m_marker.SetTitle(comp.gameObject.name);
-            m_marker.m_title.rectTransform.sizeDelta = new Vector2(m_marker.m_title.rectTransform.sizeDelta.x * 3f, m_marker.m_title.rectTransform.sizeDelta.y);
+            m_marker.m_title.rectTransform.sizeDelta = new Vector2(m_marker.m_title.rectTransform.sizeDelta.x * 5f, m_marker.m_title.rectTransform.sizeDelta.y);
             if (m_markerAlwaysShowTitle)
             {
                 m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Title;
@@ -40,6 +40,7 @@ namespace Hikaria.ItemMarker.Handlers
             {
                 m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Distance;
             }
+            m_stateOptions = m_marker.m_stateOptions;
             if (m_overridePlayerPing)
             {
                 foreach (var collider in comp.GetComponentsInChildren<Collider>(true))
@@ -49,7 +50,7 @@ namespace Hikaria.ItemMarker.Handlers
                 }
             }
 
-            enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World;
+            enabled = m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World || m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.Custom;
             if (!enabled)
                 CoroutineManager.StartCoroutine(UpdateMarkerAlphaCoroutine().WrapToIl2Cpp());
             GameEventAPI.RegisterListener(this);
@@ -186,10 +187,20 @@ namespace Hikaria.ItemMarker.Handlers
             }
 
             if (LocalPlayerAgent == null)
+            {
+                AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
+            }
 
-            if (m_markerVisibleUpdateMode == ItemMarkerVisibleUpdateModeType.World)
-                OnWorldUpdate();
+            switch (m_markerVisibleUpdateMode)
+            {
+                case ItemMarkerVisibleUpdateModeType.World:
+                    OnWorldUpdate();
+                    break;
+                case ItemMarkerVisibleUpdateModeType.Custom:
+                    OnCustomUpdate();
+                    break;
+            }
         }
 
         protected virtual void OnWorldUpdate()
@@ -199,6 +210,8 @@ namespace Hikaria.ItemMarker.Handlers
             else
                 AttemptInteract(eNavMarkerInteractionType.Hide);
         }
+
+        protected virtual void OnCustomUpdate() { }
 
         protected virtual void OnDestroy()
         {
@@ -235,13 +248,13 @@ namespace Hikaria.ItemMarker.Handlers
                 return;
             }
 
-            if (!IsDiscovered)
+            if (LocalPlayerAgent == null || LocalPlayerAgent.CourseNode == null)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
             }
 
-            if (LocalPlayerAgent == null)
+            if (!IsDiscovered)
             {
                 AttemptInteract(eNavMarkerInteractionType.Hide);
                 return;
@@ -264,6 +277,9 @@ namespace Hikaria.ItemMarker.Handlers
                 case ItemMarkerVisibleUpdateModeType.Manual:
                     OnManualUpdate();
                     break;
+                case ItemMarkerVisibleUpdateModeType.Custom:
+                    OnCustomUpdate();
+                    break;
             }
         }
 
@@ -275,9 +291,20 @@ namespace Hikaria.ItemMarker.Handlers
 
         internal void DoExitDevMode() { OnExitDevMode(); }
 
-        protected virtual void OnEnterDevMode() { ForceUpdate(); }
+        protected virtual void OnEnterDevMode()
+        {
+            m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Title;
+            m_marker.m_stateOptions[(int)NavMarkerState.Visible] |= NavMarkerOption.Distance;
+            m_marker.SetState(m_marker.m_currentState);
+            ForceUpdate();
+        }
 
-        protected virtual void OnExitDevMode() { ForceUpdate(); }
+        protected virtual void OnExitDevMode()
+        {
+            m_marker.m_stateOptions = m_stateOptions;
+            m_marker.SetState(m_marker.m_currentState);
+            ForceUpdate();
+        }
 
         protected virtual void OnDevUpdate() { }
 
@@ -418,6 +445,8 @@ namespace Hikaria.ItemMarker.Handlers
         protected float m_updateTimer = 0f;
         protected float m_markerForceVisibleTimer = 0f;
 
+        protected NavMarkerOption[] m_stateOptions;
+
         protected struct pBasicState
         {
             public bool IsDiscovered;
@@ -438,5 +467,5 @@ public enum ItemMarkerVisibleUpdateModeType
     Zone,
     Dimension,
     Manual,
-    Dev
+    Custom
 }
