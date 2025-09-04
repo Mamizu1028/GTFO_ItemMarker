@@ -46,7 +46,14 @@ namespace Hikaria.ItemMarker.Managers
             var yielder = new WaitForSecondsRealtime(0.2f);
             while (DevMode)
             {
-                marker.DoDevModeUpdate();
+                try
+                {
+                    marker.DoDevModeUpdate();
+                }
+                catch
+                {
+
+                }
                 yield return yielder;
             }
         }

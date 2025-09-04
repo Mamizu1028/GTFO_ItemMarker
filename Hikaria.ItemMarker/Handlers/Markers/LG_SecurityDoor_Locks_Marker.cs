@@ -24,6 +24,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             base.SetupNavMarker(comp);
 
             m_marker.SetVisualStates(NavMarkerOption.WaypointTitle, NavMarkerOption.WaypointTitle, NavMarkerOption.Empty);
+            m_stateOptions = m_marker.m_stateOptions;
+
             m_marker.m_titleSubObj.transform.localScale = Vector3.one * 1.75f;
             m_marker.m_title.fontSizeMax = 50;
             m_marker.m_title.fontSizeMin = 15;
@@ -36,37 +38,13 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         private void OnDoorStateChange(pDoorState state, bool isRecall)
         {
-            switch (state.status)
+            if (!IsDiscovered)
             {
-                case eDoorStatus.Closed_LockedWithBulkheadDC:
-                    m_markerColor = ColorExt.Hex("#92A9B7");
-                    m_marker.SetColor(m_markerColor);
-                    m_markerTitle = $"<color=orange>::REQ::</color>\n<color=white>{m_locks.LinkedBulkheadDoorController.PublicName}</color>";
-                    m_marker.SetTitle(m_markerTitle);
-                    AttemptInteract(eNavMarkerInteractionType.Show);
-                    break;
-                case eDoorStatus.Closed_LockedWithKeyItem:
-                    m_markerColor = ColorExt.Hex("#FF9DE7");
-                    m_marker.SetColor(m_markerColor);
-                    m_markerTitle = $"<color=orange>::REQ::</color>\n<color=white>{m_locks.m_gateKeyItemNeeded.PublicName}</color>";
-                    m_marker.SetTitle(m_markerTitle);
-                    AttemptInteract(eNavMarkerInteractionType.Show);
-                    break;
-                case eDoorStatus.Closed_LockedWithPowerGenerator:
-                    m_markerColor = ColorExt.Hex("#FFA500");
-                    m_marker.SetColor(m_markerColor);
-                    m_markerTitle = $"<color=orange>::REQ::</color>\n<color=white>{m_locks.m_powerGeneratorNeeded.PublicName}</color>";
-                    m_marker.SetTitle(m_markerTitle);
-                    AttemptInteract(eNavMarkerInteractionType.Show);
-                    break;
-                case eDoorStatus.Unlocked:
-                case eDoorStatus.Open:
-                case eDoorStatus.Opening:
-                case eDoorStatus.Closed:
-                default:
-                    AttemptInteract(eNavMarkerInteractionType.Hide);
-                    break;
+                AttemptInteract(eNavMarkerInteractionType.Hide);
+                return;
             }
+
+            OnManualUpdate();
         }
 
         protected override void OnManualUpdate()

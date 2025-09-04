@@ -6,7 +6,8 @@ using Hikaria.ItemMarker.Handlers.Markers;
 using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
-using TheArchive.Core.Attributes;
+using TheArchive.Core.Attributes.Feature;
+using TheArchive.Core.Attributes.Feature.Patches;
 using TheArchive.Core.FeaturesAPI;
 using TheArchive.Core.Localization;
 using UnityEngine;
@@ -114,9 +115,6 @@ namespace Hikaria.ItemMarker.Features
                 if (__instance.m_playerIndex == -1)
                     return true;
 
-                if (newState.status != eNavMarkerStatus.Visible)
-                    return true;
-
                 bool flag = false;
                 if (newState.style != eNavMarkerStyle.PlayerPingResourceLocker && newState.style != eNavMarkerStyle.PlayerPingResourceBox)
                 {
@@ -129,12 +127,16 @@ namespace Hikaria.ItemMarker.Features
                         if (marker.ItemMarker.Style != newState.style)
                             continue;
                         marker.ItemMarker.OnPlayerPing();
+                        newState.worldPos = marker.ItemMarker.WorldPos;
+                        newState.status = eNavMarkerStatus.Visible;
                         flag = true;
+                        break;
                     }
                 }
 
                 if (flag)
                 {
+                    __instance.m_markerHideTimer = Clock.Time + __instance.AutoHideDelay;
                     __instance.transform.position = newState.worldPos;
                     __instance.m_marker.SetStyle(newState.style);
                     __instance.m_marker.SetVisible(false);

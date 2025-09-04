@@ -25,6 +25,12 @@ namespace Hikaria.ItemMarker.Handlers
             m_marker.m_title.fontSizeMax = m_markerTitleFontSize;
             m_marker.m_title.fontSizeMin = m_markerTitleFontSize;
             m_terminalItem ??= comp.GetComponentInChildren<LG_GenericTerminalItem>();
+            if (m_terminalItem != null && m_terminalItem.SpawnNode == null)
+            {
+                var area = m_terminalItem.GetComponentInParent<LG_Area>();
+                if (area != null)
+                    m_terminalItem.SpawnNode = area.m_courseNode;
+            }
             if (!string.IsNullOrEmpty(m_markerTitle))
                 m_marker.SetTitle(m_markerTitle);
             else if (m_terminalItem != null && !string.IsNullOrEmpty(m_terminalItem.TerminalItemKey))
@@ -62,25 +68,28 @@ namespace Hikaria.ItemMarker.Handlers
 
         public virtual void OnPlayerPing()
         {
-            if (!IsDiscovered)
+            if (!IsDiscovered && m_discoverOnPlayerPing)
                 IsDiscovered = true;
 
             AttemptInteract(eNavMarkerInteractionType.Show);
-            m_marker.Ping(m_markerPingFadeOutTime);
-            m_markerForceVisibleTimer = Clock.Time + m_markerPingFadeOutTime;
+            m_marker.Ping(m_markerPlayerPingFadeOutTime);
+            m_markerForceVisibleTimer = Clock.Time + m_markerPlayerPingFadeOutTime;
 
             if (!enabled)
-                CoroutineManager.StartCoroutine(HideDelay(m_markerPingFadeOutTime + 0.01f).WrapToIl2Cpp());
+                CoroutineManager.StartCoroutine(HideDelay(m_markerPlayerPingFadeOutTime + 0.01f).WrapToIl2Cpp());
         }
 
         public virtual void OnTerminalPing()
         {
+            if (!IsDiscovered && m_discoverOnTerminalPing)
+                IsDiscovered = true;
+
             AttemptInteract(eNavMarkerInteractionType.Show);
-            m_marker.Ping(m_markerPingFadeOutTime);
-            m_markerForceVisibleTimer = Clock.Time + m_markerPingFadeOutTime;
+            m_marker.Ping(m_markerTerminalPingFadeOutTime);
+            m_markerForceVisibleTimer = Clock.Time + m_markerTerminalPingFadeOutTime;
 
             if (!enabled)
-                CoroutineManager.StartCoroutine(HideDelay(m_markerPingFadeOutTime + 0.01f).WrapToIl2Cpp());
+                CoroutineManager.StartCoroutine(HideDelay(m_markerTerminalPingFadeOutTime + 0.01f).WrapToIl2Cpp());
         }
 
         public virtual void OnPlayerCourseNodeChanged(AIG_CourseNode newNode)
@@ -411,20 +420,22 @@ namespace Hikaria.ItemMarker.Handlers
         }
 
         public virtual bool AllowDiscoverScan => !m_isDiscovered;
-        public virtual AIG_CourseNode CourseNode => m_terminalItem.SpawnNode;
-
+        public virtual AIG_CourseNode CourseNode => m_terminalItem?.SpawnNode;
+        public virtual Vector3 WorldPos => m_marker.m_trackingObj.transform.position;
         public bool IsVisible => m_marker.IsVisible;
         public bool IsVisibleAndInFocus => m_marker.IsVisible && m_marker.m_currentState == NavMarkerState.InFocus;
-
         public eNavMarkerStyle Style => m_markerStyle;
-
+        public bool AllowPing => m_markerShowPin;
         internal ItemMarkerVisibleUpdateModeType VisibleUpdateMode => m_markerVisibleUpdateMode;
-
         protected virtual string MarkerTitle => m_markerTitle;
+
+        protected bool m_discoverOnPlayerPing = true;
+        protected bool m_discoverOnTerminalPing = false;
 
         protected bool m_markerAlwaysShowTitle = false;
         protected bool m_markerAlwaysShowDistance = false;
-        protected float m_markerPingFadeOutTime = 12f;
+        protected float m_markerPlayerPingFadeOutTime = 12f;
+        protected float m_markerTerminalPingFadeOutTime = 18f;
         protected ItemMarkerVisibleUpdateModeType m_markerVisibleUpdateMode = ItemMarkerVisibleUpdateModeType.World;
         protected float m_markerVisibleWorldDistance = 30f;
         protected int m_markerVisibleCourseNodeDistance = 1;

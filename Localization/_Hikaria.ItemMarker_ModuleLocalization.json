@@ -1,0 +1,32 @@
+﻿{
+  "ModuleGroup": {
+    "DisplayName": {
+      "English": "Item Marker",
+      "Chinese": "物品标记",
+      "French": null,
+      "Italian": null,
+      "German": null,
+      "Spanish": null,
+      "Russian": null,
+      "Portuguese_Brazil": null,
+      "Polish": null,
+      "Japanese": null,
+      "Korean": null
+    },
+    "Description": {
+      "English": null,
+      "Chinese": null,
+      "French": null,
+      "Italian": null,
+      "German": null,
+      "Spanish": null,
+      "Russian": null,
+      "Portuguese_Brazil": null,
+      "Polish": null,
+      "Japanese": null,
+      "Korean": null
+    }
+  },
+  "GenericTexts": {},
+  "EnumTexts": {}
+}

@@ -5,7 +5,6 @@ using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using SNetwork;
-using TheArchive.Core.Models;
 using TheArchive.Core.ModulesAPI;
 using UnityEngine;
 
@@ -47,17 +46,26 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             m_terminalItem = m_item.GetComponentInChildren<LG_GenericTerminalItem>();
             if (ItemInLevelMarkerDescriptions.Value.TryGetValue(itemDataBlock.persistentID, out var desc))
             {
-                m_markerColor = desc.Color;
-                m_markerTitle = desc.Title;
-                if (desc.UsePublicName)
+                if (desc.IgnoreThisItem)
                 {
-                    m_markerTitle = m_item.PublicName;
+                    Destroy(this);
+                    return;
                 }
-                if (desc.UseTerminalItemKey)
+                m_markerColor = desc.Color;
+                m_markerTitle = desc.CustomTitle;
+                switch (desc.TitleType)
                 {
-                    m_markerTitleUseTerminalItemKey = true;
-                    if (m_terminalItem != null)
-                        m_markerTitle = m_terminalItem.TerminalItemKey;
+                    case ItemMarkerTitleProviderType.PublicName:
+                        m_markerTitle = m_item.PublicName;
+                        break;
+                    case ItemMarkerTitleProviderType.TerminalItemKey:
+                        m_markerTitleUseTerminalItemKey = true;
+                        if (m_terminalItem != null)
+                            m_markerTitle = m_terminalItem.TerminalItemKey;
+                        break;
+                    case ItemMarkerTitleProviderType.Custom:
+                        m_markerTitle = desc.CustomTitle;
+                        break;
                 }
                 m_markerVisibleUpdateMode = desc.VisibleUpdateMode;
                 m_markerVisibleWorldDistance = desc.VisibleWorldDistance;
@@ -66,7 +74,8 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                 m_markerAlphaADS = desc.AlphaADS;
                 m_markerAlwaysShowTitle = desc.AlwaysShowTitle;
                 m_markerAlwaysShowDistance = desc.AlwaysShowDistance;
-                m_markerPingFadeOutTime = desc.PingFadeOutTime;
+                m_markerPlayerPingFadeOutTime = desc.PlayerPingFadeOutTime;
+                m_markerTerminalPingFadeOutTime = desc.TerminalPingFadeOutTime;
                 if (desc.UseCustomIcon)
                 {
                     if (IconManager.TryGetCustomIcon(desc.CustomIconFileName, out var sprite))
@@ -495,24 +504,31 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public bool IsPlacedInLevel;
         }
 
-        private static CustomSettings<Dictionary<uint, ItemInLevelMarkerDescription>> ItemInLevelMarkerDescriptions = new("ItemInLevelMarkerDescriptions", new());
+        private static CustomSetting<Dictionary<uint, ItemInLevelMarkerDescription>> ItemInLevelMarkerDescriptions = new("ItemInLevelMarkerDescriptions", new());
+
+        public enum ItemMarkerTitleProviderType
+        {
+            PublicName,
+            TerminalItemKey,
+            Custom
+        }
 
         private class ItemInLevelMarkerDescription
         {
             public uint ItemID { get; set; } = 0U;
+            public bool IgnoreThisItem { get; set; } = false;
             public string DataBlockName { get; set; } = string.Empty;
             public string PublicName { get; set; } = string.Empty;
-            public string Title { get; set; } = string.Empty;
-            public bool UsePublicName { get; set; } = false;
-            public bool UseTerminalItemKey { get; set; } = false;
-            public SColor Color { get; set; } = UnityEngine.Color.white;
+            public string CustomTitle { get; set; } = string.Empty;
+            public ItemMarkerTitleProviderType TitleType { get; set; } = ItemMarkerTitleProviderType.PublicName;
+            public Color Color { get; set; } = Color.white;
             public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.Custom;
             public float VisibleWorldDistance { get; set; } = 30f;
             public int VisibleCourseNodeDistance { get; set; } = 1;
             public float Alpha { get; set; } = 0.9f;
             public float AlphaADS { get; set; } = 0.4f;
-            public float IconScale { get; set; } = 0.4f;
-            public float PingFadeOutTime { get; set; } = 12f;
+            public float PlayerPingFadeOutTime { get; set; } = 12f;
+            public float TerminalPingFadeOutTime { get; set; } = 18f;
             public bool AlwaysShowTitle { get; set; } = false;
             public bool AlwaysShowDistance { get; set; } = false;
             public bool UseCustomIcon { get; set; } = false;
@@ -533,12 +549,16 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                         ItemID = block.persistentID,
                         DataBlockName = block.name,
                         PublicName = block.publicName,
-                        Title = block.publicName,
+                        CustomTitle = block.publicName,
                         VisibleUpdateMode = GetDefaultUpdateModeForSlot(block.inventorySlot),
                         AlwaysShowTitle = block.inventorySlot == InventorySlot.InLevelCarry,
                         AlwaysShowDistance = block.inventorySlot == InventorySlot.InLevelCarry,
-                        UsePublicName = block.inventorySlot == InventorySlot.InLevelCarry,
-                        UseTerminalItemKey = block.inventorySlot == InventorySlot.InPocket || block.inventorySlot == InventorySlot.Pickup,
+                        TitleType = block.inventorySlot switch
+                        {
+                            InventorySlot.InLevelCarry => ItemMarkerTitleProviderType.PublicName,
+                            InventorySlot.InPocket or InventorySlot.Pickup => ItemMarkerTitleProviderType.TerminalItemKey,
+                            _ => ItemMarkerTitleProviderType.PublicName
+                        }
                     };
                     ItemInLevelMarkerDescriptions.Value[block.persistentID] = desc;
                 }
@@ -553,19 +573,13 @@ namespace Hikaria.ItemMarker.Handlers.Markers
 
         private static ItemMarkerVisibleUpdateModeType GetDefaultUpdateModeForSlot(InventorySlot slot)
         {
-            switch (slot)
+            return slot switch
             {
-                case InventorySlot.ResourcePack:
-                case InventorySlot.Consumable:
-                    return ItemMarkerVisibleUpdateModeType.Custom;
-                case InventorySlot.InPocket:
-                case InventorySlot.Pickup:
-                    return ItemMarkerVisibleUpdateModeType.Zone;
-                case InventorySlot.InLevelCarry:
-                    return ItemMarkerVisibleUpdateModeType.Manual;
-                default:
-                    return ItemMarkerVisibleUpdateModeType.World;
-            }
+                InventorySlot.ResourcePack or InventorySlot.Consumable => ItemMarkerVisibleUpdateModeType.Custom,
+                InventorySlot.InPocket or InventorySlot.Pickup => ItemMarkerVisibleUpdateModeType.Zone,
+                InventorySlot.InLevelCarry => ItemMarkerVisibleUpdateModeType.Manual,
+                _ => ItemMarkerVisibleUpdateModeType.World
+            };
         }
 
         private static readonly InventorySlot[] ValidItemSlots = { InventorySlot.ResourcePack, InventorySlot.Consumable, InventorySlot.Pickup, InventorySlot.InPocket, InventorySlot.InLevelCarry };

@@ -6,6 +6,6 @@
 
         public const string NAME = "ItemMarker";
 
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.0.3";
     }
 }

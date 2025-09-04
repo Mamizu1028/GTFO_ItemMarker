@@ -5,6 +5,33 @@ VisualStudioVersion = 17.11.35431.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hikaria.ItemMarker", "Hikaria.ItemMarker\Hikaria.ItemMarker.csproj", "{03BFAAD4-EC52-4A9B-A855-704AEEF53C42}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		Dependencies.props = Dependencies.props
+		GameFolder.props = GameFolder.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{CC0D649C-62D6-41CB-92E6-E9C91D000807}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Localization", "Localization", "{13B16C54-7CA9-4221-A5B7-D7592CD28DC1}"
+	ProjectSection(SolutionItems) = preProject
+		Localization\_Hikaria.ItemMarker_ModuleLocalization.json = Localization\_Hikaria.ItemMarker_ModuleLocalization.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "icons", "icons", "{0D281817-CD83-47D8-9EA1-3CC0D089D365}"
+	ProjectSection(SolutionItems) = preProject
+		Assets\icons\C-Foam Grenade.png = Assets\icons\C-Foam Grenade.png
+		Assets\icons\C-Foam Trip Mine.png = Assets\icons\C-Foam Trip Mine.png
+		Assets\icons\Explosive Trip Mine.png = Assets\icons\Explosive Trip Mine.png
+		Assets\icons\Fog Repeller.png = Assets\icons\Fog Repeller.png
+		Assets\icons\Glow Stick.png = Assets\icons\Glow Stick.png
+		Assets\icons\I2-LP Syringe.png = Assets\icons\I2-LP Syringe.png
+		Assets\icons\IIx Syringe.png = Assets\icons\IIx Syringe.png
+		Assets\icons\Lock Melter.png = Assets\icons\Lock Melter.png
+		Assets\icons\Long Range Flashlight.png = Assets\icons\Long Range Flashlight.png
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -18,6 +45,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D281817-CD83-47D8-9EA1-3CC0D089D365} = {CC0D649C-62D6-41CB-92E6-E9C91D000807}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {829F9E43-B494-4ABE-87C5-BECAA4F9066D}
