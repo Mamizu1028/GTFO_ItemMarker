@@ -5,7 +5,9 @@ using Hikaria.ItemMarker.Managers;
 using LevelGeneration;
 using Player;
 using SNetwork;
+using TheArchive.Core.Models;
 using TheArchive.Core.ModulesAPI;
+using TheArchive.Utilities;
 using UnityEngine;
 
 namespace Hikaria.ItemMarker.Handlers.Markers
@@ -51,7 +53,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
                     Destroy(this);
                     return;
                 }
-                m_markerColor = desc.Color;
+                m_markerColor = desc.Color.ToUnityColor();
                 m_markerTitle = desc.CustomTitle;
                 switch (desc.TitleType)
                 {
@@ -521,7 +523,7 @@ namespace Hikaria.ItemMarker.Handlers.Markers
             public string PublicName { get; set; } = string.Empty;
             public string CustomTitle { get; set; } = string.Empty;
             public ItemMarkerTitleProviderType TitleType { get; set; } = ItemMarkerTitleProviderType.PublicName;
-            public Color Color { get; set; } = Color.white;
+            public SColor Color { get; set; } = UnityEngine.Color.white.ToSColor();
             public ItemMarkerVisibleUpdateModeType VisibleUpdateMode { get; set; } = ItemMarkerVisibleUpdateModeType.Custom;
             public float VisibleWorldDistance { get; set; } = 30f;
             public int VisibleCourseNodeDistance { get; set; } = 1;

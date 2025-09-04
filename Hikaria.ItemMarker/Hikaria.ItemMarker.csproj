@@ -12,6 +12,7 @@
 
 	<PropertyGroup>
 		<AssetsFileDir>../Assets/</AssetsFileDir>
+		<CustomSettingFileDir>../Settings/</CustomSettingFileDir>
 		<LocalizationFileDir>../Localization/</LocalizationFileDir>
 		<CopyBuildToPluginFolder>true</CopyBuildToPluginFolder>
 		<PluginOutputPath>../output/$(AssemblyName)/plugins/</PluginOutputPath>

@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{CC0D64
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Localization", "Localization", "{13B16C54-7CA9-4221-A5B7-D7592CD28DC1}"
 	ProjectSection(SolutionItems) = preProject
+		Localization\ItemMarker_Localization.json = Localization\ItemMarker_Localization.json
 		Localization\_Hikaria.ItemMarker_ModuleLocalization.json = Localization\_Hikaria.ItemMarker_ModuleLocalization.json
 	EndProjectSection
 EndProject
@@ -30,6 +31,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "icons", "icons", "{0D281817
 		Assets\icons\IIx Syringe.png = Assets\icons\IIx Syringe.png
 		Assets\icons\Lock Melter.png = Assets\icons\Lock Melter.png
 		Assets\icons\Long Range Flashlight.png = Assets\icons\Long Range Flashlight.png
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{7AC7CD6F-69C7-42AE-BA6C-88C5E331C681}"
+	ProjectSection(SolutionItems) = preProject
+		Settings\ItemInLevelMarkerDescriptions.json = Settings\ItemInLevelMarkerDescriptions.json
 	EndProjectSection
 EndProject
 Global

@@ -1,0 +1,55 @@
+{
+  "Internal": {
+    "FeatureSettingsTexts": {
+      "Hikaria.ItemMarker.Features.ItemMarker.Name": {
+        "FName": {
+          "English": "Item Marker",
+          "Chinese": "物品标记",
+          "French": null,
+          "Italian": null,
+          "German": null,
+          "Spanish": null,
+          "Russian": null,
+          "Portuguese_Brazil": null,
+          "Polish": null,
+          "Japanese": null,
+          "Korean": null
+        }
+      }
+    },
+    "FeatureSettingsEnumTexts": {},
+    "ExtraTexts": [
+      {
+        "UntranslatedText": "未拾起",
+        "Description": "",
+        "ID": 1,
+        "Languages": {
+          "English": "NEVER PICKED UP",
+          "Chinese": "未拾起"
+        }
+      },
+      {
+        "UntranslatedText": "未发现",
+        "Description": "",
+        "ID": 2,
+        "Languages": {
+          "English": "UNDISCOVERED",
+          "Chinese": "未发现"
+        }
+      },
+      {
+        "UntranslatedText": "不同区域",
+        "Description": "",
+        "ID": 3,
+        "Languages": {
+          "English": "IN DIFFERENT ZONE",
+          "Chinese": "不同区域"
+        }
+      }
+    ]
+  },
+  "External": {
+    "ExternalFeatureSettingsTexts": {},
+    "ExternalEnumTexts": {}
+  }
+}
